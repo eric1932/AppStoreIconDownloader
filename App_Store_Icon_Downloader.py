@@ -3,7 +3,7 @@
 # Name: App Store Icon Downloader
 # Author: Eric Liu
 # Email: zl36@illinois.edu
-# Version: 1.0.3
+# Version: 1.0.4
 
 import os
 import re
@@ -30,13 +30,13 @@ if __name__ == '__main__':
     if use_custom_url:
         app_url = input("App Store URL: ")
         # restrict to US or CN App Store
-        match = re.findall(r"http(s)?://apps\.apple\.com/(us|cn)/app/.*?/id[0-9].*", app_url)
+        match = re.findall(r"apps\.apple\.com/[a-z]{2}/app/.*/id[0-9]+", app_url)
         if len(match) == 0:
             print('invalid App Store URL!')
             sys.exit(1)
-
-    # url-encode app_url & enforce https
-    app_url = r'https://' + parse.quote(re.findall(r"apps\.apple\.com.*", app_url)[0])
+        else:
+            # url-encode app_url & enforce https
+            app_url = r'https://' + parse.quote(match[0])
 
     # try reg match
     with request.urlopen(app_url) as response:
