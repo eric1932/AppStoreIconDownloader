@@ -18,25 +18,26 @@ from PIL import Image
 # allow certificate from local issuer
 ssl._create_default_https_context = ssl._create_unverified_context
 
-# Google on the AppStore | default app_url
+# Google on the AppStore (test app_url)
 app_url = 'https://apps.apple.com/us/app/google/id284815942'
 
 if __name__ == '__main__':
     # default values
     use_custom_url = True
-    download_or_else_print = True
-    save_dir = os.path.expanduser("~") + '/Downloads'
+    download_or_print = True  # True to download; False to print
+    save_dir = os.path.join(os.path.expanduser("~"), '/Downloads')
 
-    if use_custom_url:
-        app_url = input("App Store URL: ")
-        # restrict to US or CN App Store
-        match = re.findall(r"apps\.apple\.com/[a-z]{2}/app/.*/id[0-9]+", app_url)
-        if len(match) == 0:
-            print('invalid App Store URL!')
-            sys.exit(1)
-        else:
-            # url-encode app_url & enforce https
-            app_url = r'https://' + parse.quote(match[0])
+    # TODO getopt
+
+    app_url = input("App Store URL: ") if len(sys.argv) == 1 else sys.argv[1]  # take the first argument
+    # match App Store URLs
+    match = re.findall(r"apps\.apple\.com/[a-z]{2}/app/.*/id[0-9]+", app_url)
+    if len(match) == 0:
+        print('invalid App Store URL!')
+        exit(1)
+    else:
+        # encode app_url & enforce https
+        app_url = r'https://' + parse.quote(match[0])
 
     # try reg match
     with request.urlopen(app_url) as response:
@@ -46,7 +47,7 @@ if __name__ == '__main__':
                              web_source_code)
     if len(image_match) == 0:
         print('no matches found!')
-        sys.exit(1)
+        exit(1)
     else:
         print("found image url!")
     version_match = re.findall(r"<p class=\"l-column small-6 medium-12 whats-new__latest__version\">.*?</p>",
@@ -62,8 +63,8 @@ if __name__ == '__main__':
     img = Image.open(BytesIO(request.urlopen(image_url_10240).read()))
     print('image size is: {0}'.format(img.size))
     image_url_max = re.sub(r'10240x0w', str(img.size[0]) + 'x0w', image_url_10240)
-    if download_or_else_print:
-        app_name = input("input App name: ")
+    if download_or_print:
+        app_name = input("input App name: ") if len(sys.argv) <= 2 else sys.argv[2]  # take the second argument
         output_file_name = app_name + '_' + version + '_' + str(img.size[0]) + 'x0w.png'
         print('saving image to file \"' + output_file_name + '\"')
         with request.urlopen(image_url_max) as response, open(os.path.join(save_dir, output_file_name), 'wb') as file:
