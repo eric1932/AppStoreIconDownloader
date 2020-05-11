@@ -5,10 +5,10 @@
 # Email: zl36@illinois.edu
 # Version: 1.0.4
 
+import argparse
 import os
 import re
 import ssl
-import sys
 import urllib.parse as parse
 import urllib.request as request
 from io import BytesIO
@@ -22,14 +22,16 @@ ssl._create_default_https_context = ssl._create_unverified_context
 app_url = 'https://apps.apple.com/us/app/google/id284815942'
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Download app icon from App Store')
+    parser.add_argument('url', metavar='URL', type=str, nargs='?', help='App Store URL (apps.apple.com...)')
+    parser.add_argument('name', type=str, nargs='?', help='Application name (mandatory)')
+    args = parser.parse_args()
+
     # default values
-    use_custom_url = True
     download_or_print = True  # True to download; False to print
     save_dir = os.path.join(os.path.expanduser("~"), '/Downloads')
 
-    # TODO getopt
-
-    app_url = input("App Store URL: ") if len(sys.argv) == 1 else sys.argv[1]  # take the first argument
+    app_url = args.url if args.url else input("App Store URL: ")
     # match App Store URLs
     match = re.findall(r"apps\.apple\.com/[a-z]{2}/app/.*/id[0-9]+", app_url)
     if len(match) == 0:
@@ -52,7 +54,7 @@ if __name__ == '__main__':
         print("found image url!")
     version_match = re.findall(r"<p class=\"l-column small-6 medium-12 whats-new__latest__version\">.*?</p>",
                                web_source_code)  # returns a list
-    version = "None"
+    version = "NA"
     if len(version_match) != 0:
         version = version_match[0][65:][:-4]  # extract version info
 
@@ -64,7 +66,7 @@ if __name__ == '__main__':
     print('image size is: {0}'.format(img.size))
     image_url_max = re.sub(r'10240x0w', str(img.size[0]) + 'x0w', image_url_10240)
     if download_or_print:
-        app_name = input("input App name: ") if len(sys.argv) <= 2 else sys.argv[2]  # take the second argument
+        app_name = args.name if args.name else input("input App name: ")
         output_file_name = app_name + '_' + version + '_' + str(img.size[0]) + 'x0w.png'
         print('saving image to file \"' + output_file_name + '\"')
         with request.urlopen(image_url_max) as response, open(os.path.join(save_dir, output_file_name), 'wb') as file:
