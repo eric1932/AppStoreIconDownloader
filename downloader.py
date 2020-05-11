@@ -3,7 +3,7 @@
 # Name: App Store Icon Downloader
 # Author: Eric Liu
 # Email: zl36@illinois.edu
-# Version: 1.0.4
+# Version: 1.0.5
 
 import argparse
 import os
@@ -17,28 +17,10 @@ from PIL import Image
 # allow certificate from local issuer
 ssl._create_default_https_context = ssl._create_unverified_context
 
-# test app url
-# Google on the AppStore
-app_url = 'https://apps.apple.com/us/app/google/id284815942'
-# app_url = 'https://apps.apple.com/us/app/id284815942'
-# WeChat
-# app_url = 'https://apps.apple.com/us/app/wechat/id414478124'
-# app_url = 'https://apps.apple.com/cn/app/wechat/id414478124'
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Download app icon from App Store')
-    parser.add_argument('url', metavar='URL', type=str, nargs='?', help='App Store URL (apps.apple.com...)')
-    parser.add_argument('name', type=str, nargs='?', help='Application name (mandatory)')
-    parser.add_argument('--debug', action='store_true')
-    args = parser.parse_args()
-
-    download_or_print = False if args.debug else True  # True to download; False to print
-    save_dir = os.path.join(os.path.expanduser("~"), 'Downloads')
-
-    if args.url:
-        app_url = args.url
-    elif not args.debug:
-        app_url = input("App Store URL: ")
+def download_image(app_url: str, print_only: bool, args_name: str = None, save_path: str = None):
+    if not save_path:
+        save_path = os.path.join(os.path.expanduser("~"), 'Downloads')
     # match App Store URLs
     match = re.search(r"(apps\.apple\.com/([a-z]{2})/app/)(.*/)?(id[0-9]+)", app_url)
     # groups() example output: ('apps.apple.com/us/app/', 'us', 'google/', 'id284815942')
@@ -80,17 +62,45 @@ if __name__ == '__main__':
     img = Image.open(BytesIO(request.urlopen(image_url_10240).read()))
     print('image size is: {0}'.format(img.size))
     image_url_max = re.sub(r'10240x0w', str(img.size[0]) + 'x0w', image_url_10240)
-    if download_or_print:
-        if args.name:
-            app_name = args.name
-        output_file_name = app_name + '_' + app_version + '_' + str(img.size[0]) + 'x0w.png'
-        print('saving image to file \"' + output_file_name + '\"')
-        with request.urlopen(image_url_max) as response, open(os.path.join(save_dir, output_file_name), 'wb') as file:
-            img_bin = response.read()
-            file.write(img_bin)
-        print('success!')
-    else:
+    if print_only:
         print('app name:', app_name)
         print('version:', app_version)
         print('store url:', app_url)
         print('image url:', image_url_max)
+    else:
+        if args_name:
+            app_name = args_name
+        output_file_name = app_name + '_' + app_version + '_' + str(img.size[0]) + 'x0w.png'
+        print('saving image to file \"' + output_file_name + '\"')
+        with request.urlopen(image_url_max) as response, open(os.path.join(save_path, output_file_name), 'wb') as file:
+            img_bin = response.read()
+            file.write(img_bin)
+        print('success!')
+
+
+# test app url
+# Google on the AppStore
+main_app_url = 'https://apps.apple.com/us/app/google/id284815942'
+# main_app_url = 'https://apps.apple.com/us/app/id284815942'
+# WeChat
+# main_app_url = 'https://apps.apple.com/us/app/wechat/id414478124'
+# main_app_url = 'https://apps.apple.com/cn/app/wechat/id414478124'
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Download app icon from App Store')
+    parser.add_argument('url', metavar='URL', type=str, nargs='?', help='App Store URL (apps.apple.com...)')
+    parser.add_argument('name', type=str, nargs='?', help='Application name (mandatory)')
+    parser.add_argument('--debug', action='store_true')
+    args = parser.parse_args()
+
+    if args.url:
+        main_app_url = args.url
+    elif not args.debug:
+        main_app_url = input("App Store URL: ")
+    else:
+        # use built-in
+        pass
+
+    download_image(main_app_url,
+                   False if args.debug else True,
+                   args_name=args.name)
