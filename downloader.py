@@ -35,12 +35,14 @@ def download_image(app_url: str, print_only: bool, args_name: str = None, save_p
     with request.urlopen(app_url) as response:
         web_html = response.read().decode()
     # alternative re match "https:\/\/is.*?-ssl\.mzstatic\.com\/image\/thumb\/.*?AppIcon.*?\.png\/230x0w\.png"
-    image_match = re.findall(r"https:\/\/is.*?-ssl\.mzstatic\.com\/image\/thumb\/.*?\.png\/230x0w\.png", web_html)
-    if len(image_match) == 0:
+    # image_match = re.findall(r"https:\/\/is.*?-ssl\.mzstatic\.com\/image\/thumb\/.*?\.png\/230x0w\.png", web_html)
+    image_match = re.search(r"https:\/\/is.*?-ssl\.mzstatic\.com\/image\/thumb\/.*?\.(png|jpg|jpeg)\/230x0w\.("
+                            r"png|jpg|jpeg)", web_html)
+    if not image_match:
         print('no matches found!')
         exit(1)
-    else:
-        print("found image url!")
+    print("found image url!")
+    file_type = image_match.group(2)
 
     # Get app name
     if store_region == 'cn':
@@ -55,7 +57,7 @@ def download_image(app_url: str, print_only: bool, args_name: str = None, save_p
     else:
         app_version = re.search(r"whats-new__latest__version\">Version (.*?)</p>", web_html).group(1)
 
-    image_url_orig = image_match[0]
+    image_url_orig = image_match.group()
     # make sure to get largest icon size
     print('determining largest image size...')
     image_url_10240 = re.sub(r'230x0w', '10240x0w', image_url_orig)
@@ -70,7 +72,7 @@ def download_image(app_url: str, print_only: bool, args_name: str = None, save_p
     else:
         if args_name:
             app_name = args_name
-        output_file_name = app_name + '_' + app_version + '_' + str(img.size[0]) + 'x0w.png'
+        output_file_name = app_name + '_' + app_version + '_' + str(img.size[0]) + 'x0w.' + file_type
         print('saving image to file \"' + output_file_name + '\"')
         with request.urlopen(image_url_max) as response, open(os.path.join(save_path, output_file_name), 'wb') as file:
             img_bin = response.read()
