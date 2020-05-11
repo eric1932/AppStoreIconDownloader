@@ -1,3 +1,10 @@
+#!/usr/bin/env python3
+
+# Name: App Store Icon Downloader
+# Author: Eric Liu
+# Email: zl36@illinois.edu
+# Version: 1.0.6
+
 import urllib.parse
 
 from googleapiclient.discovery import build
