@@ -29,7 +29,7 @@ if __name__ == '__main__':
 
     # default values
     download_or_print = True  # True to download; False to print
-    save_dir = os.path.join(os.path.expanduser("~"), '/Downloads')
+    save_dir = os.path.join(os.path.expanduser("~"), 'Downloads')
 
     app_url = args.url if args.url else input("App Store URL: ")
     # match App Store URLs
