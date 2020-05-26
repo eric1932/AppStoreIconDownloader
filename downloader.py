@@ -89,10 +89,10 @@ main_app_url = 'https://apps.apple.com/us/app/google/id284815942'
 # main_app_url = 'https://apps.apple.com/cn/app/wechat/id414478124'
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Download app icon from App Store')
+    parser = argparse.ArgumentParser(description='Download app icons from App Store')
     parser.add_argument('url', metavar='URL', type=str, nargs='?', help='App Store URL (apps.apple.com...)')
-    parser.add_argument('name', type=str, nargs='?', help='Application name (mandatory)')
-    parser.add_argument('--debug', action='store_true')
+    parser.add_argument('name', type=str, nargs='?', help='Application name')
+    parser.add_argument('--debug', action='store_true', help='print only instead of download')
     args = parser.parse_args()
 
     if args.url:
@@ -104,5 +104,5 @@ if __name__ == '__main__':
         pass
 
     download_image(main_app_url,
-                   False if args.debug else True,
+                   args.debug,
                    args_name=args.name)
