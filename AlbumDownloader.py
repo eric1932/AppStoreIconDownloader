@@ -16,7 +16,7 @@ from selenium.webdriver.chrome.options import Options
 ssl._create_default_https_context = ssl._create_unverified_context
 
 
-def download_album_cover(album_url: str, print_only: bool, args_name: str = None, save_path: str = None):
+def download_album_cover(album_url: str, print_only: bool, args_name: str = None, save_path: str = None, max_size: bool = False):
     if not save_path:
         save_path = os.path.join(os.path.expanduser("~"), 'Downloads')
     # match App Store URLs
@@ -54,13 +54,15 @@ def download_album_cover(album_url: str, print_only: bool, args_name: str = None
         print('no matches found!')
         exit(1)
     print("found image url!")
-    image_match = re.match(r".*?.jpg", image_match)
+    image_match = re.match(r".*?bb.jpg", image_match).group()
+    if max_size:
+        image_match = re.sub(r"/[0-9]{2,4}x[0-9]{2,4}bb.jpg", "/10000x10000.jpg", image_match)
 
     # Get album title
     title_match = re.search(r"<h1 class=\"product-name.*?>\s+(.*?)\s+<!---->\s+</h1>", page_source)
     album_title = title_match.group(1)
 
-    image_match_url = image_match.group()
+    image_match_url = image_match
     print('determining largest image size...')
     img = Image.open(BytesIO(request.urlopen(image_match_url).read()))
     print('image size: {0}'.format(img.size))
@@ -90,6 +92,7 @@ if __name__ == '__main__':
     parser.add_argument('url', metavar='URL', type=str, nargs='?', help='iTunes URL (apps.apple.com...)')
     parser.add_argument('name', type=str, nargs='?', help='Album name (mandatory)')
     parser.add_argument('--debug', action='store_true', help='print only instead of download')
+    parser.add_argument('--max', action='store_true', help='try to get maximum size of the cover')
     args = parser.parse_args()
 
     if args.url:
@@ -101,5 +104,6 @@ if __name__ == '__main__':
         pass
 
     download_album_cover(main_album_url,
-                         True if args.debug else False,
-                         args_name=args.name)
+                         args.debug,
+                         args_name=args.name,
+                         max_size=args.max)
