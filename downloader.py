@@ -11,6 +11,7 @@ import re
 import ssl
 import urllib.request as request
 from io import BytesIO
+from sys import exit
 
 from PIL import Image
 
