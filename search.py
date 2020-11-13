@@ -26,6 +26,9 @@ if __name__ == '__main__':
 
     service = build("customsearch", "v1", developerKey=api_key)
     result = service.cse().list(q=kw, cx=cse_id).execute()
+    if 'items' not in result.keys():
+        print("No results found.")
+        exit(0)
     result = list(filter(lambda x: 'Mac App Store' not in x['title'], result['items']))  # filter Mac App Store pages
     if len(result) == 0:
         exit(0)
