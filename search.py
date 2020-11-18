@@ -5,15 +5,24 @@
 # Email: zl36@illinois.edu
 # Version: 1.0.7
 
-import urllib.parse
 import argparse
+import signal
+import sys
+import urllib.parse
 
 from googleapiclient.discovery import build
 
 from credentials import api_key, cse_id
 from downloader import download_image
 
+
+def sigint_handler(sig, frame):
+    sys.exit(0)
+
+
 if __name__ == '__main__':
+    signal.signal(signal.SIGINT, sigint_handler)
+
     parser = argparse.ArgumentParser(description='Search and Download app icon from App Store')
     parser.add_argument('keyword', type=str, nargs='?', help='keyword to search; leave empty to use prompt input')
     parser.add_argument('--lucky', action='store_true', help='use the first search result')
