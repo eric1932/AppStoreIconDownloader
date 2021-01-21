@@ -6,6 +6,7 @@
 # Version: 1.0.7
 
 import argparse
+import re
 import signal
 import urllib.parse
 from sys import exit
@@ -14,6 +15,8 @@ from googleapiclient.discovery import build
 
 from credentials import api_key, cse_id
 from downloader import download_image
+
+REGIONS = ['cn', 'us']
 
 
 def sigint_handler(sig, frame):
@@ -34,11 +37,17 @@ if __name__ == '__main__':
         kw = input("search keyword: ")
 
     service = build("customsearch", "v1", developerKey=api_key)
-    result = service.cse().list(q=kw, cx=cse_id).execute()
-    if 'items' not in result.keys():
+    search_result = service.cse().list(q=kw, cx=cse_id).execute()
+    if 'items' not in search_result.keys():
         print("No result found.")
         exit(0)
-    result = list(filter(lambda x: 'Mac App Store' not in x['title'], result['items']))  # filter Mac App Store pages
+    result = []
+    for each in list(filter(lambda x: 'Mac App Store' not in x['title'],
+                            search_result['items'])):  # filter Mac App Store pages
+        match = re.match(r"https?://apps.apple.com/([a-z]{2})/app/",
+                         each['link'])  # filter out other regions & /developer
+        if match and match.group(1) in REGIONS:
+            result.append(each)
     if len(result) == 0:
         exit(0)
     for i, each in enumerate(result):
