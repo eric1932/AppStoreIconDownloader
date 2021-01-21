@@ -46,16 +46,16 @@ if __name__ == '__main__':
         print("\t" + urllib.parse.unquote(each['link']))
     if args.lucky:
         print("I'm feeling lucky!")
-        chosen_nb = 1
+        chosen_num = 1
     else:
         while True:
-            chosen_nb = input("select: ")
+            chosen_num = input("select: ")
             try:
-                chosen_nb = int(chosen_nb)
-                if 1 <= chosen_nb <= len(result):
+                chosen_num = int(chosen_num)
+                if 1 <= chosen_num <= len(result):
                     break
             except ValueError as e:
                 pass
-    chosen_item = result[chosen_nb-1]
+    chosen_item = result[chosen_num - 1]
 
     download_image(chosen_item['link'], False)
