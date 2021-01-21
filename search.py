@@ -42,7 +42,7 @@ if __name__ == '__main__':
     if len(result) == 0:
         exit(0)
     for i, each in enumerate(result):
-        print(str(i+1) + ". " + each['title'])
+        print(str(i+1) + ".\t" + each['title'].strip())
         print("\t" + urllib.parse.unquote(each['link']))
     if args.lucky:
         print("I'm feeling lucky!")
