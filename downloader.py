@@ -10,6 +10,7 @@ import os
 import re
 import ssl
 import urllib.request as request
+import urllib.error
 from io import BytesIO
 from sys import exit
 
@@ -33,8 +34,12 @@ def download_image(app_url: str, print_only: bool, args_name: str = None, save_p
     store_region = match.group(2)
 
     # try reg match
-    with request.urlopen(app_url) as response:
-        web_html = response.read().decode()
+    try:
+        with request.urlopen(app_url) as response:
+            web_html = response.read().decode()
+    except urllib.error.HTTPError as e:
+        print("AppStore:", e)
+        exit(1)
     # alternative re match "https:\/\/is.*?-ssl\.mzstatic\.com\/image\/thumb\/.*?AppIcon.*?\.png\/230x0w\.png"
     # image_match = re.findall(r"https:\/\/is.*?-ssl\.mzstatic\.com\/image\/thumb\/.*?\.png\/230x0w\.png", web_html)
     image_match = re.search(r"https:\/\/is.*?-ssl\.mzstatic\.com\/image\/thumb\/.*?\.(png|jpg|jpeg)\/230x0w\.("
