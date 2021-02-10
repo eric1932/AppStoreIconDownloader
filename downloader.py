@@ -59,9 +59,11 @@ def download_image(app_url: str, print_only: bool, args_name: str = None, save_p
     # Get app version
     # '<p class="l-column small-6 medium-12 whats-new__latest__version">Version 105.0</p>'
     if store_region == 'cn':
-        app_version = re.search(r"whats-new__latest__version\" data-test-version-number>版本 (.*?)</p>", web_html).group(1)
+        app_version = re.search(r"whats-new__latest__version\"\s?(data-test-version-number)?>版本 (.*?)</p>",
+                                web_html).group(2)
     else:
-        app_version = re.search(r"whats-new__latest__version\" data-test-version-number>Version (.*?)</p>", web_html).group(1)
+        app_version = re.search(r"whats-new__latest__version\"\s?(data-test-version-number)?>Version (.*?)</p>",
+                                web_html).group(2)
 
     image_url_orig = image_match.group()
     # make sure to get largest icon size
