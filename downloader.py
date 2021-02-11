@@ -42,7 +42,7 @@ def download_image(app_url: str, print_only: bool, args_name: str = None, save_p
         exit(1)
     # alternative re match "https:\/\/is.*?-ssl\.mzstatic\.com\/image\/thumb\/.*?AppIcon.*?\.png\/230x0w\.png"
     # image_match = re.findall(r"https:\/\/is.*?-ssl\.mzstatic\.com\/image\/thumb\/.*?\.png\/230x0w\.png", web_html)
-    image_match = re.search(r"https:\/\/is.*?-ssl\.mzstatic\.com\/image\/thumb\/.*?\.(png|jpg|jpeg)\/230x0w\.("
+    image_match = re.search(r"https://is.*?-ssl\.mzstatic\.com/image/thumb/.*?\.(png|jpg|jpeg)/230x0w\.("
                             r"png|jpg|jpeg)", web_html)
     if not image_match:
         print('no matches found!')
