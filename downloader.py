@@ -6,11 +6,12 @@
 # Version: 1.0.7
 
 import argparse
+import base64
 import os
 import re
 import ssl
-import urllib.request as request
 import urllib.error
+import urllib.request as request
 from io import BytesIO
 from sys import exit
 
@@ -18,6 +19,17 @@ from PIL import Image
 
 # allow certificate from local issuer
 ssl._create_default_https_context = ssl._create_unverified_context
+
+
+def show_image_in_terminal(image_name, image_binary, image_length: int):
+    b64_name = base64.b64encode(image_name.encode('ascii')).decode('ascii')
+    b64_img = base64.b64encode(image_binary).decode('ascii')  # remove the b'___' wrapping
+    print(f"\033]1337;File="
+          f"name={b64_name}"
+          f"size={len(image_binary)};"
+          f"width={image_length}px;"
+          f"height={image_length}px;"
+          f"inline=1:{b64_img}\a")
 
 
 def download_image(app_url: str, print_only: bool, args_name: str = None, save_path: str = None):
@@ -85,6 +97,8 @@ def download_image(app_url: str, print_only: bool, args_name: str = None, save_p
         with request.urlopen(image_url_max) as response, open(os.path.join(save_path, output_file_name), 'wb') as file:
             img_bin = response.read()
             file.write(img_bin)
+        if os.environ.get("TERM_PROGRAM") == "iTerm.app":
+            show_image_in_terminal(app_name, img_bin, img.size[0])
         print('success!')
 
 
