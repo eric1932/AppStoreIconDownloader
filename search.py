@@ -41,6 +41,8 @@ if __name__ == '__main__':
     if 'items' not in search_result.keys():
         print("No result found.")
         exit(0)
+
+    # filter results
     result = []
     for each in list(filter(lambda x: 'Mac App Store' not in x['title'],
                             search_result['items'])):  # filter Mac App Store pages
@@ -48,6 +50,8 @@ if __name__ == '__main__':
                          each['link'])  # filter out other regions & /developer
         if match and match.group(1) in REGIONS:
             result.append(each)
+    result = list(filter(lambda x: '?l=' not in x['link'], result))  # remove link with alternative language
+
     if len(result) == 0:
         exit(0)
     for i, each in enumerate(result):
