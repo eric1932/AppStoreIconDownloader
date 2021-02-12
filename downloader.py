@@ -22,8 +22,8 @@ ssl._create_default_https_context = ssl._create_unverified_context
 
 
 def show_image_in_terminal(image_name, image_binary, image_length: int):
-    b64_name = base64.b64encode(image_name.encode('ascii')).decode('ascii')
-    b64_img = base64.b64encode(image_binary).decode('ascii')  # remove the b'___' wrapping
+    b64_name = base64.b64encode(image_name.encode('utf-8')).decode('utf-8')  # in case of non-ascii chars
+    b64_img = base64.b64encode(image_binary).decode('ascii')  # decode to remove the b'___' wrapping
     print(f"\033]1337;File="
           f"name={b64_name}"
           f"size={len(image_binary)};"
