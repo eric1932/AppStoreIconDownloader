@@ -24,7 +24,8 @@ ssl._create_default_https_context = ssl._create_unverified_context
 def show_image_in_terminal(image_name, image_binary, image_length: int):
     b64_name = base64.b64encode(image_name.encode('utf-8')).decode('utf-8')  # in case of non-ascii chars
     b64_img = base64.b64encode(image_binary).decode('ascii')  # decode to remove the b'___' wrapping
-    print(f"\033]1337;File="
+    print(f"\n"
+          f"\033]1337;File="
           f"name={b64_name}"
           f"size={len(image_binary)};"
           f"width={image_length}px;"
@@ -81,9 +82,17 @@ def download_image(app_url: str, print_only: bool, args_name: str = None, save_p
     # make sure to get largest icon size
     print('determining largest image size...')
     image_url_10240 = re.sub(r'230x0w', '10240x0w', image_url_orig)
-    img = Image.open(BytesIO(request.urlopen(image_url_10240).read()))
-    print('image size is: {0}'.format(img.size))
-    image_url_max = re.sub(r'10240x0w', str(img.size[0]) + 'x0w', image_url_10240)
+    img_bin = request.urlopen(image_url_10240).read()
+    img_obj = Image.open(BytesIO(img_bin))
+    print('image size is: {0}'.format(img_obj.size))
+    image_url_max = re.sub(r'10240x0w', str(img_obj.size[0]) + 'x0w', image_url_10240)
+
+    if os.environ.get("TERM_PROGRAM") == "iTerm.app":  # iTerm spec
+        image_url_128 = re.sub(r'10240x0w', '128x0w', image_url_10240)
+        with request.urlopen(image_url_128) as resp:
+            image_bin_128 = resp.read()
+        show_image_in_terminal(app_name, image_bin_128, 128)
+
     if print_only:
         print('app name:', app_name)
         print('version:', app_version)
@@ -92,13 +101,10 @@ def download_image(app_url: str, print_only: bool, args_name: str = None, save_p
     else:
         if args_name:
             app_name = args_name
-        output_file_name = app_name + '_' + app_version + '_' + str(img.size[0]) + 'x0w.' + file_type
+        output_file_name = app_name + '_' + app_version + '_' + str(img_obj.size[0]) + 'x0w.' + file_type
         print('saving image to file \"' + output_file_name + '\"')
-        with request.urlopen(image_url_max) as response, open(os.path.join(save_path, output_file_name), 'wb') as file:
-            img_bin = response.read()
+        with open(os.path.join(save_path, output_file_name), 'wb') as file:
             file.write(img_bin)
-        if os.environ.get("TERM_PROGRAM") == "iTerm.app":
-            show_image_in_terminal(app_name, img_bin, img.size[0])
         print('success!')
 
 
