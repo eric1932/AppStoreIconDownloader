@@ -22,26 +22,24 @@ from image_util import show_image_in_terminal
 ssl._create_default_https_context = ssl._create_unverified_context
 
 
-def download_image(app_url: str, print_only: bool, args_name: str = None, save_path: str = None):
+def download_image(app_url: str, print_only: bool, args_name: str = None, save_path: str = None, img_size: int = 1024):
     if not save_path:
         save_path = os.path.join(os.path.expanduser("~"), 'Downloads')
     # match App Store URLs
     match = re.search(r"(apps\.apple\.com/([a-z]{2})/app/)(.*/)?(id[0-9]+)", app_url)
     # groups() example output: ('apps.apple.com/us/app/', 'us', 'google/', 'id284815942')
     if not match:
-        print('invalid App Store URL!')
-        exit(1)
+        raise ValueError("invalid App Store URL!")
     # enforce https
-    app_url = r'https://' + match.group(1) + match.group(4)
+    app_url_cleaned = r'https://' + match.group(1) + match.group(4)
     store_region = match.group(2)
 
     # try reg match
     try:
-        with request.urlopen(app_url) as response:
+        with request.urlopen(app_url_cleaned) as response:
             web_html = response.read().decode()
-    except urllib.error.HTTPError as e:
-        print("AppStore:", e)
-        exit(1)
+    except urllib.error.HTTPError:
+        raise ValueError("AppStore:")
     # alternative re match "https:\/\/is.*?-ssl\.mzstatic\.com\/image\/thumb\/.*?AppIcon.*?\.png\/230x0w\.png"
     # image_match = re.findall(r"https:\/\/is.*?-ssl\.mzstatic\.com\/image\/thumb\/.*?\.png\/230x0w\.png", web_html)
     image_match = re.search(r"https://is.*?-ssl\.mzstatic\.com/image/thumb/.*?\.(png|jpg|jpeg)/230x0w\.("
@@ -50,7 +48,7 @@ def download_image(app_url: str, print_only: bool, args_name: str = None, save_p
         print('no matches found!')
         exit(1)
     print("found image url!")
-    file_type = image_match.group(2)
+    file_ext = image_match.group(2)
 
     # Get app name
     if store_region == 'cn':
@@ -70,14 +68,14 @@ def download_image(app_url: str, print_only: bool, args_name: str = None, save_p
     image_url_orig = image_match.group()
     # make sure to get largest icon size
     print('determining largest image size...')
-    image_url_10240 = re.sub(r'230x0w', '10240x0w', image_url_orig)
-    img_bin = request.urlopen(image_url_10240).read()
+    image_url_10240x0w = re.sub(r'230x0w', '10240x0w', image_url_orig)
+    img_bin = request.urlopen(image_url_10240x0w).read()
     img_obj = Image.open(BytesIO(img_bin))
     print('image size is: {0}'.format(img_obj.size))
-    image_url_max = re.sub(r'10240x0w', str(img_obj.size[0]) + 'x0w', image_url_10240)
+    image_url = image_url_10240x0w.replace("10240x0w", f'{img_size if img_size else img_obj.size[0]}x0w')
 
     if os.environ.get("TERM_PROGRAM") == "iTerm.app":  # iTerm spec
-        image_url_128 = re.sub(r'10240x0w', '128x0w', image_url_10240)
+        image_url_128 = re.sub(r'10240x0w', '128x0w', image_url_10240x0w)
         with request.urlopen(image_url_128) as resp:
             image_bin_128 = resp.read()
         show_image_in_terminal(app_name, image_bin_128, 128)
@@ -85,12 +83,12 @@ def download_image(app_url: str, print_only: bool, args_name: str = None, save_p
     if print_only:
         print('app name:', app_name)
         print('version:', app_version)
-        print('store url:', app_url)
-        print('image url:', image_url_max)
+        print('store url:', app_url_cleaned)
+        print('image url:', image_url)
     else:
         if args_name:
             app_name = args_name
-        output_file_name = app_name + '_' + app_version + '_' + str(img_obj.size[0]) + 'x0w.' + file_type
+        output_file_name = app_name + '_' + app_version + '_' + str(img_obj.size[0]) + 'x0w.' + file_ext
         print('saving image to file \"' + output_file_name + '\"')
         with open(os.path.join(save_path, output_file_name), 'wb') as file:
             file.write(img_bin)
