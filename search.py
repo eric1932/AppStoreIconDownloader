@@ -15,6 +15,7 @@ from googleapiclient.discovery import build
 
 from credentials import api_key, cse_id
 from downloader import download_image
+from image_util import show_image_by_store_url
 
 REGIONS = ['cn', 'us']
 
@@ -57,6 +58,7 @@ if __name__ == '__main__':
     for i, each in enumerate(result):
         print(str(i+1) + ".\t" + each['title'].strip())
         print("\t" + urllib.parse.unquote(each['link']))
+        show_image_by_store_url(urllib.parse.unquote(each['link']), 64)
     if args.lucky:
         print("I'm feeling lucky!")
         chosen_num = 1
