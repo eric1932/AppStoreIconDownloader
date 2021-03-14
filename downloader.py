@@ -22,9 +22,7 @@ from image_util import show_image_in_terminal
 ssl._create_default_https_context = ssl._create_unverified_context
 
 
-def download_image(app_url: str, print_only: bool, args_name: str = None, save_path: str = None, img_size: int = 1024):
-    if not save_path:
-        save_path = os.path.join(os.path.expanduser("~"), 'Downloads')
+def get_orig_img_url(app_url):
     # match App Store URLs
     match = re.search(r"(apps\.apple\.com/([a-z]{2})/app/)(.*/)?(id[0-9]+)", app_url)
     # groups() example output: ('apps.apple.com/us/app/', 'us', 'google/', 'id284815942')
@@ -33,7 +31,6 @@ def download_image(app_url: str, print_only: bool, args_name: str = None, save_p
     # enforce https
     app_url_cleaned = r'https://' + match.group(1) + match.group(4)
     store_region = match.group(2)
-
     # try reg match
     try:
         with request.urlopen(app_url_cleaned) as response:
@@ -48,14 +45,12 @@ def download_image(app_url: str, print_only: bool, args_name: str = None, save_p
         print('no matches found!')
         exit(1)
     print("found image url!")
-    file_ext = image_match.group(2)
-
+    img_ext = image_match.group(2)
     # Get app name
     if store_region == 'cn':
         app_name = re.search("<title>‎App\xa0Store 上的“(.*)”</title>", web_html).group(1)
     else:
         app_name = re.search("<title>\u200e(.*) on the App\xa0Store</title>", web_html).group(1)
-
     # Get app version
     # '<p class="l-column small-6 medium-12 whats-new__latest__version">Version 105.0</p>'
     if store_region == 'cn':
@@ -64,18 +59,35 @@ def download_image(app_url: str, print_only: bool, args_name: str = None, save_p
     else:
         app_version = re.search(r"whats-new__latest__version\"\s?(data-test-version-number)?>Version (.*?)</p>",
                                 web_html).group(2)
-
     image_url_orig = image_match.group()
-    # make sure to get largest icon size
+    return app_name, app_url_cleaned, app_version, img_ext, image_url_orig
+
+
+def get_img_maxsize(image_url_orig):
+    # make sure to get largest/chosen icon size
     print('determining largest image size...')
     image_url_10240x0w = re.sub(r'230x0w', '10240x0w', image_url_orig)
     img_bin = request.urlopen(image_url_10240x0w).read()
-    img_obj = Image.open(BytesIO(img_bin))
-    print('image size is: {0}'.format(img_obj.size))
-    image_url = image_url_10240x0w.replace("10240x0w", f'{img_size if img_size else img_obj.size[0]}x0w')
+    # img_obj = Image.open(BytesIO(img_bin))
+    img_size_tup = Image.open(BytesIO(img_bin)).size
+    print('image size is: {0}'.format(img_size_tup))
+    return image_url_10240x0w, img_bin, img_size_tup
+
+
+def change_img_url_size(image_url_10240x0w, img_size: int):
+    return re.sub(r"[0-9]+x0w", f'{img_size}x0w', image_url_10240x0w)
+
+
+def download_image(app_url: str, print_only: bool = False, args_name: str = None, save_path: str = None):
+    if not save_path:
+        save_path = os.path.join(os.path.expanduser("~"), 'Downloads')
+
+    app_name, app_url_cleaned, app_version, img_ext, image_url_orig = get_orig_img_url(app_url)
+
+    image_url_10240x0w, img_bin, img_size_tup = get_img_maxsize(image_url_orig)
 
     if os.environ.get("TERM_PROGRAM") == "iTerm.app":  # iTerm spec
-        image_url_128 = re.sub(r'10240x0w', '128x0w', image_url_10240x0w)
+        image_url_128 = change_img_url_size(image_url_10240x0w, 128)
         with request.urlopen(image_url_128) as resp:
             image_bin_128 = resp.read()
         show_image_in_terminal(app_name, image_bin_128, 128)
@@ -84,11 +96,11 @@ def download_image(app_url: str, print_only: bool, args_name: str = None, save_p
         print('app name:', app_name)
         print('version:', app_version)
         print('store url:', app_url_cleaned)
-        print('image url:', image_url)
+        print('image url:', change_img_url_size(image_url_10240x0w, img_size_tup[0]))
     else:
         if args_name:
             app_name = args_name
-        output_file_name = app_name + '_' + app_version + '_' + str(img_obj.size[0]) + 'x0w.' + file_ext
+        output_file_name = app_name + '_' + app_version + '_' + str(img_size_tup[0]) + 'x0w.' + img_ext
         print('saving image to file \"' + output_file_name + '\"')
         with open(os.path.join(save_path, output_file_name), 'wb') as file:
             file.write(img_bin)
