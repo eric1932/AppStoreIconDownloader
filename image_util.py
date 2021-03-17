@@ -2,6 +2,7 @@ import base64
 import re
 import urllib.error
 from io import BytesIO
+import html
 from sys import exit
 from urllib import request as request
 
@@ -76,6 +77,8 @@ def get_orig_img_url(app_url, print_log: bool = True):
         app_name = re.search("<title>‎App\xa0Store 上的“(.*)”</title>", web_html).group(1)
     else:
         app_name = re.search("<title>\u200e(.*) on the App\xa0Store</title>", web_html).group(1)
+    # unescape html encoding
+    app_name = html.unescape(app_name)
     # Get app version
     # '<p class="l-column small-6 medium-12 whats-new__latest__version">Version 105.0</p>'
     if store_region == 'cn':

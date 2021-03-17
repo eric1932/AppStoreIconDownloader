@@ -6,6 +6,7 @@
 # Version: 1.0.7
 
 import argparse
+import os
 import re
 import signal
 import urllib.parse
@@ -58,7 +59,8 @@ if __name__ == '__main__':
     for i, each in enumerate(result):
         print(str(i+1) + ".\t" + each['title'].strip())
         print("\t" + urllib.parse.unquote(each['link']))
-        show_image_by_store_url(urllib.parse.unquote(each['link']), 64)
+        if os.environ.get("TERM_PROGRAM") == "iTerm.app":  # iTerm spec
+            show_image_by_store_url(urllib.parse.unquote(each['link']), 64)
     if args.lucky:
         print("I'm feeling lucky!")
         chosen_num = 1
