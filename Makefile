@@ -13,5 +13,7 @@ source_venv:
 		pip install -r requirements.txt; \
 	)
 
-install: executable
+install:
 	install dist/search ${HOME}/bin/${EXE_NAME}
+
+all: executable install
