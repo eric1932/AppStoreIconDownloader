@@ -12,8 +12,10 @@ import urllib.request as request
 
 from image_util import show_image_in_terminal, get_img_maxsize, change_img_url_size, get_orig_img_url
 
-# allow certificate from local issuer
-ssl._create_default_https_context = ssl._create_unverified_context
+# disable verifications to allow certificate from local issuer
+ctx = ssl.create_default_context()
+ctx.check_hostname = False
+ctx.verify_mode = ssl.CERT_NONE
 
 
 def download_image(app_url: str, print_only: bool = False, args_name: str = None, save_path: str = None):
