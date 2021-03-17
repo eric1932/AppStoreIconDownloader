@@ -1,2 +1,4 @@
-google-api-python-client==1.8.0
 Pillow
+aiohttp
+google-api-python-client==1.8.0
+selenium

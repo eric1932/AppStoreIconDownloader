@@ -16,9 +16,11 @@ from googleapiclient.discovery import build
 
 from credentials import api_key, cse_id
 from downloader import download_image
-from image_util import show_image_by_store_url
+from image_util import async_submit_store_urls, async_wait_tasks, horizontal_show_image_by_store_urls
 
 REGIONS = ['cn', 'us']
+
+FLAG_ITERM = os.environ.get("TERM_PROGRAM") == "iTerm.app"
 
 
 def sigint_handler(sig, frame):
@@ -45,34 +47,40 @@ if __name__ == '__main__':
         exit(0)
 
     # filter results
-    result = []
+    results = []
     for each in list(filter(lambda x: 'Mac App Store' not in x['title'],
                             search_result['items'])):  # filter Mac App Store pages
         match = re.match(r"https?://apps.apple.com/([a-z]{2})/app/",
                          each['link'])  # filter out other regions & /developer
         if match and match.group(1) in REGIONS:
-            result.append(each)
-    result = list(filter(lambda x: '?l=' not in x['link'], result))  # remove link with alternative language
+            results.append(each)
+    results = list(filter(lambda x: '?l=' not in x['link'], results))  # remove link with alternative language
 
-    if len(result) == 0:
+    if len(results) == 0:
         exit(0)
-    for i, each in enumerate(result):
+    # create async request for getting images
+    (loop, async_img_tasks) = async_submit_store_urls(map(lambda x: x['link'], results)) if FLAG_ITERM else (None, [])
+    for i, each in enumerate(results):
         print(str(i+1) + ".\t" + each['title'].strip())
         print("\t" + urllib.parse.unquote(each['link']))
-        if os.environ.get("TERM_PROGRAM") == "iTerm.app":  # iTerm spec
-            show_image_by_store_url(urllib.parse.unquote(each['link']), 64)
+        # if FLAG_ITERM:  # iTerm spec
+        #     show_image_by_store_url(urllib.parse.unquote(each['link']), 64)
     if args.lucky:
         print("I'm feeling lucky!")
         chosen_num = 1
     else:
+        if FLAG_ITERM:
+            results = async_wait_tasks(loop, async_img_tasks)
+            results = [x[4] for x in results]  # extract store urls
+            horizontal_show_image_by_store_urls(results)
         while True:
             chosen_num = input("select: ")
             try:
                 chosen_num = int(chosen_num)
-                if 1 <= chosen_num <= len(result):
+                if 1 <= chosen_num <= len(results):
                     break
             except ValueError as e:
                 pass
-    chosen_item = result[chosen_num - 1]
+    chosen_item = results[chosen_num - 1]
 
     download_image(chosen_item['link'], False)
