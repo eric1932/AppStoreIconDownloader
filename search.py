@@ -3,7 +3,7 @@
 # Name: App Store Icon Downloader
 # Author: Eric Liu
 # Email: zl36@illinois.edu
-# Version: 1.0.7
+# Version: 1.1.0
 
 import argparse
 import os
