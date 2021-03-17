@@ -30,10 +30,10 @@ def show_image_by_store_url(store_url: str, img_wh: int = None):
     show_image_in_terminal("", image_binary, img_wh)
 
 
-def async_submit_store_urls(store_urls: [str]):
+def async_submit_store_urls(store_urls: [str], img_side_len: int = None):
     tasks = []
     for each_url in store_urls:
-        tasks.append(asyncio.ensure_future(async_get_orig_img_url(each_url, print_log=False)))
+        tasks.append(asyncio.ensure_future(async_get_orig_img_url(each_url, print_log=False, size=img_side_len)))
     return asyncio.get_event_loop(), tasks
 
 
@@ -42,8 +42,9 @@ def async_wait_tasks(loop, tasks: list):
     return results
 
 
-def horizontal_show_image_by_store_urls(image_urls: Union[List[str], Tuple[str]]):
-    images = [Image.open(BytesIO(get_img_binary(each_url))) for each_url in image_urls]
+# TODO auto new line given console width
+def horizontal_show_image_by_store_urls(image_bytes: Union[List[bytes], Tuple[bytes]]):
+    images = [Image.open(BytesIO(each_bytes)) for each_bytes in image_bytes]
     long_img = concat_image(images)
     long_img_as_bytes = BytesIO()
     long_img.save(long_img_as_bytes, format='png')
@@ -66,8 +67,8 @@ def get_img_maxsize(image_url_orig):
     return image_url_10240x0w, img_bin, img_size_tup
 
 
-def change_img_url_size(image_url_10240x0w, img_size: int):
-    return re.sub(r"[0-9]+x0w", f'{img_size}x0w', image_url_10240x0w)
+def change_img_url_size(image_url_Xx0w, img_size: int):
+    return re.sub(r"[0-9]+x0w", f'{img_size}x0w', image_url_Xx0w)
 
 
 def get_orig_img_url(app_url, print_log: bool = True):
@@ -116,9 +117,8 @@ def get_orig_img_url(app_url, print_log: bool = True):
 
 
 # TODO deduplicate
-async def async_get_orig_img_url(store_url: str, print_log: bool = True):
+async def async_get_orig_img_url(store_url: str, print_log: bool = True, size: int = None):
     # match App Store URLs
-    print(store_url)
     match = re.search(r"(apps\.apple\.com/([a-z]{2})/app/)(.*/)?(id[0-9]+)", store_url)
     # groups() example output: ('apps.apple.com/us/app/', 'us', 'google/', 'id284815942')
     if not match:
@@ -136,7 +136,7 @@ async def async_get_orig_img_url(store_url: str, print_log: bool = True):
                 response = response.decode()
                 web_html = response
     except Exception as e:
-        print(e)
+        print(e)  # TODO
         raise ValueError("AppStore:")
     # alternative re match "https:\/\/is.*?-ssl\.mzstatic\.com\/image\/thumb\/.*?AppIcon.*?\.png\/230x0w\.png"
     # image_match = re.findall(r"https:\/\/is.*?-ssl\.mzstatic\.com\/image\/thumb\/.*?\.png\/230x0w\.png", web_html)
@@ -165,7 +165,13 @@ async def async_get_orig_img_url(store_url: str, print_log: bool = True):
         app_version = re.search(r"whats-new__latest__version\"\s?(data-test-version-number)?>Version (.*?)</p>",
                                 web_html).group(2)
     img_url_orig = image_match.group()
-    return app_name, app_url_cleaned, app_version, img_ext, img_url_orig
+
+    async with ClientSession() as session:
+        async with session.get(change_img_url_size(img_url_orig, size) if size else img_url_orig) as response:
+            response = await response.read()
+            image_bin = response
+
+    return app_name, app_url_cleaned, app_version, img_ext, img_url_orig, image_bin
 
 
 def concat_image(images: [Image.Image]) -> Image.Image:

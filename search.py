@@ -58,20 +58,18 @@ if __name__ == '__main__':
 
     if len(results) == 0:
         exit(0)
-    # create async request for getting images
-    (loop, async_img_tasks) = async_submit_store_urls(map(lambda x: x['link'], results)) if FLAG_ITERM else (None, [])
+    # create async request for getting images (for iTerm)
+    (loop, async_img_tasks) = async_submit_store_urls(map(lambda x: x['link'], results), img_side_len=64) if FLAG_ITERM else (None, [])
     for i, each in enumerate(results):
         print(str(i+1) + ".\t" + each['title'].strip())
         print("\t" + urllib.parse.unquote(each['link']))
-        # if FLAG_ITERM:  # iTerm spec
-        #     show_image_by_store_url(urllib.parse.unquote(each['link']), 64)
     if args.lucky:
         print("I'm feeling lucky!")
         chosen_num = 1
     else:
-        if FLAG_ITERM:
+        if FLAG_ITERM:  # iTerm spec
             results = async_wait_tasks(loop, async_img_tasks)
-            results = [x[4] for x in results]  # extract store urls
+            results = [x[5] for x in results]  # extract image bytes
             horizontal_show_image_by_store_urls(results)
         while True:
             chosen_num = input("select: ")
