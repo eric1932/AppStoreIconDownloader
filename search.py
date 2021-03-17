@@ -68,9 +68,9 @@ if __name__ == '__main__':
         chosen_num = 1
     else:
         if FLAG_ITERM:  # iTerm spec
-            results = async_wait_tasks(loop, async_img_tasks)
-            results = [x[5] for x in results]  # extract image bytes
-            horizontal_show_image_by_store_urls(results)
+            img_results = async_wait_tasks(loop, async_img_tasks)
+            img_results = [x[5] for x in img_results]  # extract image bytes
+            horizontal_show_image_by_store_urls(img_results)
         while True:
             chosen_num = input("select: ")
             try:
