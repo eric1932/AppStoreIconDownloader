@@ -17,3 +17,6 @@ install:
 	install dist/search ${HOME}/bin/${EXE_NAME}
 
 all: executable install
+
+clean:
+	rm -rf build dist
