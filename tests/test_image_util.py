@@ -1,7 +1,8 @@
-import unittest
-from image_util import *
-from tests.commons import app_store_google
 import re
+import unittest
+
+from appstore_parser import get_orig_img_url
+from tests.commons import app_store_google
 
 
 class ImageUtilTestCase(unittest.TestCase):
