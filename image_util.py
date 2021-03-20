@@ -67,7 +67,7 @@ def get_img_maxsize(image_url_orig):
     # make sure to get largest/chosen icon size
     print('determining largest image size...')
     # AppStore will provide the possible largest size
-    image_url_10240x0w = re.sub(r'230x0w', '10240x0w', image_url_orig)
+    image_url_10240x0w = re.sub(r'230x(0w|172sr)', '10240x0w', image_url_orig)  # also match for iMessage icon
     img_bin = request.urlopen(image_url_10240x0w).read()
     img_size_tup = Image.open(BytesIO(img_bin)).size
     print(f'image size is: {img_size_tup}')

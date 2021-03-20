@@ -10,8 +10,8 @@ import os
 import ssl
 import urllib.request as request
 
-from image_util import show_image_in_terminal, get_img_maxsize
 from appstore_parser import get_orig_img_url, change_img_url_size
+from image_util import show_image_in_terminal, get_img_maxsize
 
 # disable verifications to allow certificate from local issuer
 ctx = ssl.create_default_context()
@@ -35,13 +35,14 @@ def download_image(app_url: str, print_only: bool = False, args_name: str = None
 
     if print_only:
         print('app name:', app_name)
-        print('version:', app_version)
+        print('version:', app_version if app_version else "[N/A]")
         print('store url:', app_url_cleaned)
         print('image url:', change_img_url_size(image_url_10240x0w, img_size_tup[0]))
     else:
         if args_name:
             app_name = args_name
-        output_file_name = app_name + '_' + app_version + '_' + str(img_size_tup[0]) + 'x0w.' + img_ext
+        output_file_name = app_name + (('_' + app_version) if app_version else '') + '_' + str(img_size_tup[0]) + (
+            'x0w' if img_size_tup[0] == img_size_tup[1] else f'x{str(img_size_tup[1])}') + '.' + img_ext
         print('saving image to file \"' + output_file_name + '\"')
         with open(os.path.join(save_path, output_file_name), 'wb') as file:
             file.write(img_bin)
@@ -55,6 +56,10 @@ main_app_url = 'https://apps.apple.com/us/app/google/id284815942'
 # WeChat
 # main_app_url = 'https://apps.apple.com/us/app/wechat/id414478124'
 # main_app_url = 'https://apps.apple.com/cn/app/wechat/id414478124'
+# iMessage app
+main_app_url = 'https://apps.apple.com/us/app/id1152347024'
+# No png
+main_app_url = 'https://apps.apple.com/us/app/id1121100236'
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Download app icons from App Store')

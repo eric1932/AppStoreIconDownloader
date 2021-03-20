@@ -1,7 +1,6 @@
 import html
 import re
 import urllib.error
-from sys import exit
 from urllib import request as request
 
 from aiohttp import ClientSession
@@ -22,31 +21,51 @@ def _get_clean_store_url(app_url):
 def _parse_appstore_html(print_log, store_region, web_html):
     # alternative re match "https:\/\/is.*?-ssl\.mzstatic\.com\/image\/thumb\/.*?AppIcon.*?\.png\/230x0w\.png"
     # image_match = re.findall(r"https:\/\/is.*?-ssl\.mzstatic\.com\/image\/thumb\/.*?\.png\/230x0w\.png", web_html)
-    image_match = re.search(r"https://is.*?-ssl\.mzstatic\.com/image/thumb/.*?\.(png|jpg|jpeg)/230x0w\.("
-                            r"png|jpg|jpeg)", web_html)
+    # use png first because its quality is the best
+    img_ext = 'png'
+    image_match = re.search(
+        r"https://is.*?-ssl\.mzstatic\.com/image/thumb/.*?\.png/230x(0w|[0-9]+sr)\.png",
+        web_html)
     if not image_match:
-        if print_log:
-            print('no matches found!')
-        exit(1)
+        img_ext = 'webp'
+        image_match = re.search(
+            r"https://is.*?-ssl\.mzstatic\.com/image/thumb/.*?\.webp/230x(0w|[0-9]+sr)\.webp",
+            web_html)
+        if not image_match:
+            img_ext = 'jpg'
+            image_match = re.search(
+                r"https://is.*?-ssl\.mzstatic\.com/image/thumb/.*?\.jpg/230x(0w|[0-9]+sr)\.jpg",
+                web_html)
+            if not image_match:
+                raise RuntimeError('no matches found!')
     if print_log:
         print("found image url!")
-    img_ext = image_match.group(2)
+    img_url_orig = image_match.group()
+    flag_imessage = "iMessage" in img_url_orig
     # Get app name
+    # alternative way
+    # <h1 class="product-header__title app-header__title">
+    #           王者荣耀-表情包
+    #             <span class="badge badge--product-title">4+</span>
+    #         </h1>
     if store_region == 'cn':
         app_name = re.search("<title>‎App\xa0Store 上的“(.*)”</title>", web_html).group(1)
     else:
         app_name = re.search("<title>\u200e(.*) on the App\xa0Store</title>", web_html).group(1)
     # unescape html encoding
     app_name = html.unescape(app_name)
-    # Get app version
-    # '<p class="l-column small-6 medium-12 whats-new__latest__version">Version 105.0</p>'
-    if store_region == 'cn':
-        app_version = re.search(r"whats-new__latest__version\"\s?(data-test-version-number)?>版本 (.*?)</p>",
-                                web_html).group(2)
+    if not flag_imessage:
+        # Get app version
+        # '<p class="l-column small-6 medium-12 whats-new__latest__version">Version 105.0</p>'
+        if store_region == 'cn':
+            app_version = re.search(r"whats-new__latest__version\"\s?(data-test-version-number)?>版本 (.*?)</p>",
+                                    web_html).group(2)
+        else:
+            app_version = re.search(r"whats-new__latest__version\"\s?(data-test-version-number)?>Version (.*?)</p>",
+                                    web_html).group(2)
     else:
-        app_version = re.search(r"whats-new__latest__version\"\s?(data-test-version-number)?>Version (.*?)</p>",
-                                web_html).group(2)
-    img_url_orig = image_match.group()
+        # TODO
+        app_version = ""
     return app_name, app_version, img_ext, img_url_orig
 
 
