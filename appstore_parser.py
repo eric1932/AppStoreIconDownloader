@@ -99,7 +99,3 @@ async def async_get_orig_img_url(store_url: str, print_log: bool = True):
     app_name, app_version, img_ext, img_url_orig = _parse_appstore_html(print_log, store_region, web_html)
 
     return app_name, app_url_cleaned, app_version, img_ext, img_url_orig
-
-
-def change_img_url_size(image_url_XxY, img_size: int):
-    return re.sub(r"[0-9]+x(0w|[0-9]+sr)", f'{img_size}x0w', image_url_XxY)

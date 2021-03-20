@@ -8,7 +8,7 @@ from urllib import request as request
 from PIL import Image
 from aiohttp import ClientSession
 
-from appstore_parser import async_get_orig_img_url, change_img_url_size
+from appstore_parser import async_get_orig_img_url
 
 
 def show_image_in_terminal(image_name: str, image_binary: bytes, image_side_len: Union[int, tuple]):
@@ -90,3 +90,7 @@ def concat_image(images: [Image.Image]) -> Image.Image:
         x_offset += im.size[0] + gap_size
 
     return new_img
+
+
+def change_img_url_size(image_url_XxY, img_size: int):
+    return re.sub(r"[0-9]+x(0w|[0-9]+sr)", f'{img_size}x0w', image_url_XxY)
