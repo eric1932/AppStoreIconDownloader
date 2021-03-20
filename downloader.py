@@ -9,6 +9,9 @@ import argparse
 import os
 import ssl
 import urllib.request as request
+from io import BytesIO
+
+from PIL import Image
 
 from appstore_parser import get_orig_img_url
 from image_util import show_image_in_terminal, get_img_maxsize, change_img_url_size
@@ -31,7 +34,7 @@ def download_image(app_url: str, print_only: bool = False, args_name: str = None
         image_url_128 = change_img_url_size(image_url_10240x0w, 128)
         with request.urlopen(image_url_128) as resp:
             image_bin_128 = resp.read()
-        show_image_in_terminal(app_name, image_bin_128, 128)
+        show_image_in_terminal(app_name, image_bin_128, Image.open(BytesIO(image_bin_128)).size)
 
     if print_only:
         print('app name:', app_name)
