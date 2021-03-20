@@ -18,6 +18,7 @@ def _get_clean_store_url(app_url):
     return app_url_cleaned, store_region
 
 
+# TODO parse html as tree
 def _parse_appstore_html(print_log, store_region, web_html):
     # alternative re match "https:\/\/is.*?-ssl\.mzstatic\.com\/image\/thumb\/.*?AppIcon.*?\.png\/230x0w\.png"
     # image_match = re.findall(r"https:\/\/is.*?-ssl\.mzstatic\.com\/image\/thumb\/.*?\.png\/230x0w\.png", web_html)
