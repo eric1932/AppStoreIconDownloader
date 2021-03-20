@@ -16,7 +16,7 @@ from googleapiclient.discovery import build
 
 from credentials import api_key, cse_id
 from downloader import download_image
-from image_util import async_submit_store_urls, async_wait_tasks, horizontal_show_image_by_store_urls
+from image_util import submit_store_urls_to_async, wait_async_tasks, horizontal_show_image_by_store_urls
 
 REGIONS = ['cn', 'us']
 
@@ -59,7 +59,7 @@ if __name__ == '__main__':
     if len(results) == 0:
         exit(0)
     # create async request for getting images (for iTerm)
-    (loop, async_img_tasks) = async_submit_store_urls(map(lambda x: x['link'], results), img_side_len=64) if FLAG_ITERM else (None, [])
+    (loop, async_img_tasks) = submit_store_urls_to_async(map(lambda x: x['link'], results), img_side_len=64) if FLAG_ITERM else (None, [])
     for i, each in enumerate(results):
         print(str(i+1) + ".\t" + each['title'].strip())
         print("\t" + urllib.parse.unquote(each['link']))
@@ -68,7 +68,7 @@ if __name__ == '__main__':
         chosen_num = 1
     else:
         if FLAG_ITERM:  # iTerm spec
-            img_results = async_wait_tasks(loop, async_img_tasks)
+            img_results = wait_async_tasks(loop, async_img_tasks)
             horizontal_show_image_by_store_urls(img_results)
         while True:
             chosen_num = input("select: ")

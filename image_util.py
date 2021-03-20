@@ -8,7 +8,7 @@ from urllib import request as request
 from PIL import Image
 from aiohttp import ClientSession
 
-from appstore_parser import get_orig_img_url, async_get_orig_img_url, change_img_url_size
+from appstore_parser import async_get_orig_img_url, change_img_url_size
 
 
 def show_image_in_terminal(image_name: str, image_binary: bytes, image_side_len: Union[int, tuple]):
@@ -23,20 +23,21 @@ def show_image_in_terminal(image_name: str, image_binary: bytes, image_side_len:
           f"inline=1:{b64_img}\a")
 
 
-def show_image_by_store_url(store_url: str, img_wh: int = None):
-    _, _, _, _, image_url = get_orig_img_url(store_url, print_log=False)
-    image_binary = get_img_binary(change_img_url_size(image_url, img_wh) if img_wh else image_url)
-    show_image_in_terminal("", image_binary, img_wh)
+# unused
+# def show_image_by_store_url(store_url: str, img_wh: int = None):
+#     _, _, _, _, image_url = get_orig_img_url(store_url, print_log=False)
+#     image_binary = get_img_binary(change_img_url_size(image_url, img_wh) if img_wh else image_url)
+#     show_image_in_terminal("", image_binary, img_wh)
 
 
-def async_submit_store_urls(store_urls: [str], img_side_len: int = None):
+def submit_store_urls_to_async(store_urls: [str], img_side_len: int = None):
     tasks = []
     for each_url in store_urls:
         tasks.append(asyncio.ensure_future(async_get_icon_by_url(each_url, print_log=False, size=img_side_len)))
     return asyncio.get_event_loop(), tasks
 
 
-def async_wait_tasks(loop, tasks: list):
+def wait_async_tasks(loop, tasks: list):
     results = loop.run_until_complete(asyncio.gather(*tasks))
     return results
 
@@ -62,16 +63,12 @@ def horizontal_show_image_by_store_urls(image_bytes: Union[List[bytes], Tuple[by
     show_image_in_terminal("", long_img_as_bytes, long_img.size)
 
 
-def get_img_binary(image_url) -> bytes:
-    return request.urlopen(image_url).read()
-
-
 def get_img_maxsize(image_url_orig):
     # make sure to get largest/chosen icon size
     print('determining largest image size...')
     # AppStore will provide the possible largest size
     image_url_10240x0w = re.sub(r'230x0w', '10240x0w', image_url_orig)
-    img_bin = get_img_binary(image_url_10240x0w)
+    img_bin = request.urlopen(image_url_10240x0w).read()
     img_size_tup = Image.open(BytesIO(img_bin)).size
     print(f'image size is: {img_size_tup}')
     return image_url_10240x0w, img_bin, img_size_tup
