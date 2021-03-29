@@ -46,10 +46,17 @@ def wait_async_tasks(loop, tasks: list):
 async def async_get_icon_by_url(store_url: str, print_log: bool = True, size: int = None):
     _, _, _, _, img_url_orig = await async_get_orig_img_url(store_url, print_log)
 
-    async with ClientSession() as session:
-        async with session.get(change_img_url_size(img_url_orig, size) if size else img_url_orig) as response:
-            response = await response.read()
-            image_bin = response
+    if img_url_orig:
+        async with ClientSession() as session:
+            async with session.get(change_img_url_size(img_url_orig, size) if size else img_url_orig) as response:
+                response = await response.read()
+                image_bin = response
+    else:
+        # compose empty image
+        image = Image.new('RGBA', (size if size else 128, size if size else 128), (255, 255, 255, 0))
+        image_as_bytes = BytesIO()
+        image.save(image_as_bytes, format='png')
+        image_bin = image_as_bytes.getvalue()
 
     return image_bin
 

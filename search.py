@@ -33,6 +33,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Search and Download app icon from App Store')
     parser.add_argument('keyword', type=str, nargs='?', help='keyword to search; leave empty to use prompt input')
     parser.add_argument('--lucky', action='store_true', help='use the first search result')
+    parser.add_argument('--debug', action='store_true', help='print debug info (TODO to be implemented)')
     args = parser.parse_args()
 
     if args.keyword:

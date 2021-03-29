@@ -5,6 +5,8 @@ from urllib import request as request
 
 from aiohttp import ClientSession
 
+from exceptions import NoIconMatchException
+
 
 def _get_clean_store_url(app_url):
     # match App Store URLs
@@ -19,6 +21,7 @@ def _get_clean_store_url(app_url):
 
 
 # TODO parse html as tree
+# TODO example: https://apps.apple.com/cn/app/id1540095522
 def _parse_appstore_html(print_log, store_region, web_html):
     # alternative re match "https:\/\/is.*?-ssl\.mzstatic\.com\/image\/thumb\/.*?AppIcon.*?\.png\/230x0w\.png"
     # image_match = re.findall(r"https:\/\/is.*?-ssl\.mzstatic\.com\/image\/thumb\/.*?\.png\/230x0w\.png", web_html)
@@ -38,7 +41,7 @@ def _parse_appstore_html(print_log, store_region, web_html):
                 r"https://is.*?-ssl\.mzstatic\.com/image/thumb/.*?\.jpg/230x(0w|[0-9]+sr)\.jpg",
                 web_html)
             if not image_match:
-                raise RuntimeError('no matches found!')
+                raise NoIconMatchException('no icon matches found!')
     if print_log:
         print("found image url!")
     img_url_orig = image_match.group()
@@ -97,6 +100,10 @@ async def async_get_orig_img_url(store_url: str, print_log: bool = True):
         print(e)  # TODO
         raise ValueError("AppStore:")
 
-    app_name, app_version, img_ext, img_url_orig = _parse_appstore_html(print_log, store_region, web_html)
+    try:
+        app_name, app_version, img_ext, img_url_orig = _parse_appstore_html(print_log, store_region, web_html)
+    except NoIconMatchException as e:
+        # print(f"store_url: {store_url}")
+        return '', '', '', '', ''
 
     return app_name, app_url_cleaned, app_version, img_ext, img_url_orig

@@ -1,0 +1,2 @@
+class NoIconMatchException(Exception):
+    pass
