@@ -1,1 +1,1 @@
-app_store_google = 'https://apps.apple.com/us/app/google/id284815942'
+APP_STORE_US_GOOGLE = 'https://apps.apple.com/us/app/google/id284815942'

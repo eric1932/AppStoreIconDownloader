@@ -3,12 +3,12 @@ import re
 import unittest
 
 from downloader import download_image
-from tests.commons import *
+from tests.commons import APP_STORE_US_GOOGLE
 
 
 class DownloaderTestCase(unittest.TestCase):
     def test_download(self):
-        download_image(app_store_google,
+        download_image(APP_STORE_US_GOOGLE,
                        print_only=False,
                        save_path='./')
         contain_google = list(filter(lambda x: "google" in x.lower(), os.listdir()))

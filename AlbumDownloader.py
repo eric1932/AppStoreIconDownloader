@@ -4,6 +4,7 @@ import argparse
 import os
 import re
 import ssl
+import sys
 import time
 import urllib.request as request
 from io import BytesIO
@@ -16,7 +17,13 @@ from selenium.webdriver.chrome.options import Options
 ssl._create_default_https_context = ssl._create_unverified_context
 
 
-def download_album_cover(album_url: str, print_only: bool, args_name: str = None, save_path: str = None, max_size: bool = False):
+def download_album_cover(
+        album_url: str,
+        print_only: bool,
+        args_name: str = None,
+        save_path: str = None,
+        max_size: bool = False
+):
     if not save_path:
         save_path = os.path.join(os.path.expanduser("~"), 'Downloads')
     # match App Store URLs
@@ -24,7 +31,7 @@ def download_album_cover(album_url: str, print_only: bool, args_name: str = None
     # groups() example output: ('apps.apple.com/us/app/', 'us', 'google/', 'id284815942')
     if not match:
         print('invalid App Store URL!')
-        exit(1)
+        sys.exit(1)
     # enforce https
     album_url = r'https://' + match.group(1) + match.group(4)
     store_region = match.group(2)
@@ -52,7 +59,7 @@ def download_album_cover(album_url: str, print_only: bool, args_name: str = None
     image_match = re.findall(r"https://is[0-9]+-ssl.mzstatic.com/image/thumb.*?.jpg\s[0-9]{2,4}w", page_source)[-1]
     if not image_match:
         print('no matches found!')
-        exit(1)
+        sys.exit(1)
     print("found image url!")
     image_match = re.match(r".*?bb.jpg", image_match).group()
     if max_size:

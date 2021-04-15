@@ -81,9 +81,9 @@ def get_orig_img_url(store_url: str, print_log: bool = True):
         response: http.client.HTTPResponse
         with request.urlopen(app_url_cleaned) as response:
             web_html = response.read().decode()
-    except urllib.error.HTTPError:
+    except urllib.error.HTTPError as e:
         # response.status might be 404
-        raise ValueError("AppStore:")
+        raise ValueError("AppStore:") from e
 
     app_name, app_version, img_ext, img_url_orig = _parse_appstore_html(print_log, store_region, web_html)
 
@@ -101,11 +101,11 @@ async def async_get_orig_img_url(store_url: str, print_log: bool = True):
                 web_html = response
     except Exception as e:
         print(e)  # TODO
-        raise ValueError("AppStore:")
+        raise ValueError("AppStore:") from e
 
     try:
         app_name, app_version, img_ext, img_url_orig = _parse_appstore_html(print_log, store_region, web_html)
-    except NoIconMatchException as e:
+    except NoIconMatchException:
         # print(f"store_url: {store_url}")
         return '', '', '', '', ''
 
