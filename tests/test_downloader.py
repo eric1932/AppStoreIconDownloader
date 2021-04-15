@@ -17,6 +17,8 @@ class DownloaderTestCase(unittest.TestCase):
         # cleanup
         os.remove(contain_google[0])
 
+    # TODO test 404 page
+
 
 if __name__ == '__main__':
     unittest.main()
