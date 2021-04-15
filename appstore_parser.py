@@ -1,7 +1,8 @@
 import html
+import http.client
 import re
 import urllib.error
-from urllib import request as request
+from urllib import request
 
 from aiohttp import ClientSession
 
@@ -77,9 +78,11 @@ def get_orig_img_url(store_url: str, print_log: bool = True):
     app_url_cleaned, store_region = _get_clean_store_url(store_url)
     # try reg match
     try:
+        response: http.client.HTTPResponse
         with request.urlopen(app_url_cleaned) as response:
             web_html = response.read().decode()
     except urllib.error.HTTPError:
+        # response.status might be 404
         raise ValueError("AppStore:")
 
     app_name, app_version, img_ext, img_url_orig = _parse_appstore_html(print_log, store_region, web_html)

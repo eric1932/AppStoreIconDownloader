@@ -8,9 +8,10 @@
 import argparse
 import os
 import ssl
+import urllib.error
 import urllib.request as request
 from io import BytesIO
-
+from sys import stderr
 from PIL import Image
 
 from appstore_parser import get_orig_img_url
@@ -26,7 +27,13 @@ def download_image(app_url: str, print_only: bool = False, args_name: str = None
     if not save_path:
         save_path = os.path.join(os.path.expanduser("~"), 'Downloads')
 
-    app_name, app_url_cleaned, app_version, img_ext, image_url_orig = get_orig_img_url(app_url)
+    try:
+        app_name, app_url_cleaned, app_version, img_ext, image_url_orig = get_orig_img_url(app_url)
+    except urllib.error.HTTPError and ValueError:
+        # 404 not found
+        print("Error 404: Page Not Found", file=stderr)
+        print("Nothing is downloaded!", file=stderr)
+        return
 
     image_url_10240x0w, img_bin, img_size_tup = get_img_maxsize(image_url_orig)
 
