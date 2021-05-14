@@ -5,8 +5,10 @@ import urllib.error
 from urllib import request
 
 from aiohttp import ClientSession
+from aiohttp_socks import ProxyConnector
 
 from exceptions import NoIconMatchException
+from proxy import ALL_PROXY
 
 
 def _get_clean_store_url(app_url):
@@ -94,7 +96,8 @@ async def async_get_orig_img_url(store_url: str, print_log: bool = True):
     app_url_cleaned, store_region = _get_clean_store_url(store_url)
     # try reg match
     try:
-        async with ClientSession() as session:
+        async with ClientSession(connector=ProxyConnector.from_url(ALL_PROXY)) if ALL_PROXY \
+                else ClientSession() as session:
             async with session.get(app_url_cleaned) as response:
                 response = await response.read()
                 response = response.decode()

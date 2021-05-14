@@ -7,9 +7,11 @@ from urllib import request as request
 
 from PIL import Image
 from aiohttp import ClientSession
+from aiohttp_socks import ProxyConnector
 
 from appstore_parser import async_get_orig_img_url
 from magic_numbers import IMAGE_SIZE_CEIL
+from proxy import ALL_PROXY
 
 
 def show_image_in_terminal(image_name: str, image_binary: bytes, image_side_len: Union[int, tuple]):
@@ -47,7 +49,8 @@ async def async_get_icon_by_url(store_url: str, print_log: bool = True, size: in
     _, _, _, _, img_url_orig = await async_get_orig_img_url(store_url, print_log)
 
     if img_url_orig:
-        async with ClientSession() as session:
+        async with ClientSession(connector=ProxyConnector.from_url(ALL_PROXY)) if ALL_PROXY \
+                else ClientSession() as session:
             async with session.get(change_img_url_size(img_url_orig, size) if size else img_url_orig) as response:
                 response = await response.read()
                 image_bin = response
