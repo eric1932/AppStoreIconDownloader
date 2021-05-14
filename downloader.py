@@ -9,15 +9,17 @@ import argparse
 import os
 import ssl
 import urllib.error
-import urllib.request as request
 from io import BytesIO
 from sys import stderr
+from urllib import request
+
 from PIL import Image
 
 from appstore_parser import get_orig_img_url
 from image_util import show_image_in_terminal, get_img_maxsize, change_img_url_size
 
 # disable verifications to allow certificate from local issuer
+
 ctx = ssl.create_default_context()
 ctx.check_hostname = False
 ctx.verify_mode = ssl.CERT_NONE
