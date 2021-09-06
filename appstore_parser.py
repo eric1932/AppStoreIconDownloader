@@ -34,13 +34,15 @@ def _parse_appstore_html(print_log, store_region, web_html):
         r"https://is.*?-ssl\.mzstatic\.com/image/thumb/.*?\.png/230x(0w|[0-9]+sr)\.png",
         web_html)
     if (not image_match
-            or "appicon" not in image_match.group().lower()):  # TODO temp fix
+            or ("appicon" not in image_match.group().lower()
+                and "logo" not in image_match.group().lower())):  # TODO temp fix
         img_ext = 'webp'
         image_match = re.search(
             r"https://is.*?-ssl\.mzstatic\.com/image/thumb/.*?\.webp/230x(0w|[0-9]+sr)\.webp",
             web_html)
         if (not image_match
-                or "appicon" not in image_match.group().lower()):  # TODO temp fix
+                or ("appicon" not in image_match.group().lower()
+                    and "logo" not in image_match.group().lower())):  # TODO temp fix
             img_ext = 'jpg'
             image_match = re.search(
                 r"https://is.*?-ssl\.mzstatic\.com/image/thumb/.*?\.(jpg|jpeg)/230x(0w|[0-9]+sr)\.(jpg|jpeg)",
