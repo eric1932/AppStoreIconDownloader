@@ -33,21 +33,25 @@ def _parse_appstore_html(print_log, store_region, web_html):
     image_match = re.search(
         r"https://is.*?-ssl\.mzstatic\.com/image/thumb/.*?\.png/230x(0w|[0-9]+sr)\.png",
         web_html)
-    if not image_match:
+    if (not image_match
+            or "appicon" not in image_match.group().lower()):  # TODO temp fix
         img_ext = 'webp'
         image_match = re.search(
             r"https://is.*?-ssl\.mzstatic\.com/image/thumb/.*?\.webp/230x(0w|[0-9]+sr)\.webp",
             web_html)
-        if not image_match:
+        if (not image_match
+                or "appicon" not in image_match.group().lower()):  # TODO temp fix
             img_ext = 'jpg'
             image_match = re.search(
-                r"https://is.*?-ssl\.mzstatic\.com/image/thumb/.*?\.jpg/230x(0w|[0-9]+sr)\.jpg",
+                r"https://is.*?-ssl\.mzstatic\.com/image/thumb/.*?\.(jpg|jpeg)/230x(0w|[0-9]+sr)\.(jpg|jpeg)",
                 web_html)
             if not image_match:
                 raise NoIconMatchException('no icon matches found!')
     if print_log:
         print("found image url!")
     img_url_orig = image_match.group()
+    if print_log:
+        print(img_url_orig)
     flag_imessage = "iMessage" in img_url_orig
     # Get app name
     # alternative way
@@ -64,12 +68,16 @@ def _parse_appstore_html(print_log, store_region, web_html):
     if not flag_imessage:
         # Get app version
         # '<p class="l-column small-6 medium-12 whats-new__latest__version">Version 105.0</p>'
-        if store_region == 'cn':
-            app_version = re.search(r"whats-new__latest__version\"\s?(data-test-version-number)?>版本 (.*?)</p>",
-                                    web_html).group(2)
-        else:
-            app_version = re.search(r"whats-new__latest__version\"\s?(data-test-version-number)?>Version (.*?)</p>",
-                                    web_html).group(2)
+        try:
+            if store_region == 'cn':
+                app_version = re.search(r"whats-new__latest__version\"\s?(data-test-version-number)?>版本 (.*?)</p>",
+                                        web_html).group(2)
+            else:
+                app_version = re.search(r"whats-new__latest__version\"\s?(data-test-version-number)?>Version (.*?)</p>",
+                                        web_html).group(2)
+        except AttributeError:
+            # TODO
+            app_version = ""
     else:
         # TODO
         app_version = ""
