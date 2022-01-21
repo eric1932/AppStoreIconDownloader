@@ -64,7 +64,7 @@ def _parse_appstore_html(print_log, store_region, web_html):
     if store_region == 'cn':
         app_name = re.search("<title>‎App\xa0Store 上的“(.*)”</title>", web_html).group(1)
     else:
-        app_name = re.search("<title>\u200e(.*) on the App\xa0Store</title>", web_html).group(1)
+        app_name = re.search(r"<title>[\s|\u200e]*(.*) on the App[\xa0|\s]+Store\s*</title>", web_html).group(1)
     # unescape html encoding
     app_name = html.unescape(app_name)
     if not flag_imessage:
