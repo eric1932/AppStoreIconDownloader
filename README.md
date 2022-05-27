@@ -16,9 +16,9 @@ optional arguments:
 ```
 ### Search & Download
 1. Install requirements
-2. Create `credentials.py` and fill in as following
-```python
-cse_id = '<CSE ID>'
-api_key = '<API Key>'
+2. Create `.env` and fill as follows
+```dotenv
+CSE_ID='<CSE ID>'
+API_KEY='<API Key>'
 ```
 3. run `search.py`
