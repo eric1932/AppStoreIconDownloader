@@ -7,7 +7,7 @@ from urllib import request
 from aiohttp import ClientSession
 from aiohttp_socks import ProxyConnector
 
-from exceptions import NoIconMatchException
+from Exceptions import NoIconMatchException
 from proxy import ALL_PROXY
 
 

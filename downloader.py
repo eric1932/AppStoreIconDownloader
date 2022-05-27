@@ -16,7 +16,7 @@ from urllib import request
 from PIL import Image
 
 from appstore_parser import get_orig_img_url
-from image_util import show_image_in_terminal, get_img_maxsize, change_img_url_size
+from utils.image_util import show_image_in_terminal, get_img_maxsize, change_img_url_size
 
 # disable verifications to allow certificate from local issuer
 

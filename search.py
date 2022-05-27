@@ -17,7 +17,7 @@ from googleapiclient.discovery import build
 
 from utils.cred_loader import api_key, cse_id
 from downloader import download_image
-from image_util import submit_store_urls_to_async, wait_async_tasks, horizontal_show_image_by_store_urls
+from utils.image_util import submit_store_urls_to_async, wait_async_tasks, horizontal_show_image_by_store_urls
 
 REGIONS = ['cn', 'us']
 FLAG_ITERM = os.environ.get("TERM_PROGRAM") == "iTerm.app"

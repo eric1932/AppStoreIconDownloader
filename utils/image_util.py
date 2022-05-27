@@ -10,7 +10,7 @@ from aiohttp import ClientSession
 from aiohttp_socks import ProxyConnector
 
 from appstore_parser import async_get_orig_img_url
-from magic_numbers import IMAGE_SIZE_CEIL
+from Constants import IMAGE_SIZE_CEIL
 from proxy import ALL_PROXY
 
 
@@ -79,7 +79,7 @@ def get_img_maxsize(image_url_orig):
     print('determining largest image size...')
     # AppStore will provide the possible largest size
     image_url_10240x0w = re.sub(r'230x(0w|172sr)',
-                                f'{str(IMAGE_SIZE_CEIL)}x0w',
+                                f'{IMAGE_SIZE_CEIL}x0w',
                                 image_url_orig)  # also match for iMessage icon
     img_bin = request.urlopen(image_url_10240x0w).read()
     img_size_tup = Image.open(BytesIO(img_bin)).size
