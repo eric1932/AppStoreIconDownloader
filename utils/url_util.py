@@ -5,15 +5,16 @@ def clean_store_url(app_url) -> (str, str):
     """
     Clean app store url by removing unnecessary path of app name
     :param app_url: App Store url
-    :return: cleaned App Store url and store region
+    :return: (cleaned App Store url, store region)
     """
 
-    # match App Store URLs
-    match = re.search(r"(apps\.apple\.com/([a-z]{2})/app/)(.*/)?(id[0-9]+)", app_url)
-    # groups() example output: ('apps.apple.com/us/app/', 'us', 'google/', 'id284815942')
+    # first, remove app name from url
+    app_url_clean = re.sub(r"/app/(.*/)?id", "/app/id", app_url)
+    # second, match to get store region & validate
+    match = re.match(r"(https?://)?(apps\.apple\.com/([a-z]{2})/app/id\d+)", app_url_clean)
     if not match:
-        raise ValueError("invalid App Store URL!")
-    # enforce https
-    app_url_cleaned = r'https://' + match.group(1) + match.group(4)
-    store_region = match.group(2)
+        raise ValueError("Invalid App Store URL!")
+
+    app_url_cleaned = f'https://{match.group(2)}'  # enforce https
+    store_region = match.group(3)
     return app_url_cleaned, store_region
