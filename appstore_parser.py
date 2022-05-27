@@ -9,18 +9,7 @@ from aiohttp_socks import ProxyConnector
 
 from Exceptions import NoIconMatchException
 from proxy import ALL_PROXY
-
-
-def _get_clean_store_url(app_url):
-    # match App Store URLs
-    match = re.search(r"(apps\.apple\.com/([a-z]{2})/app/)(.*/)?(id[0-9]+)", app_url)
-    # groups() example output: ('apps.apple.com/us/app/', 'us', 'google/', 'id284815942')
-    if not match:
-        raise ValueError("invalid App Store URL!")
-    # enforce https
-    app_url_cleaned = r'https://' + match.group(1) + match.group(4)
-    store_region = match.group(2)
-    return app_url_cleaned, store_region
+from utils.url_util import clean_store_url
 
 
 # TODO parse html as tree
@@ -87,7 +76,7 @@ def _parse_appstore_html(print_log, store_region, web_html):
 
 
 def get_orig_img_url(store_url: str, print_log: bool = True):
-    app_url_cleaned, store_region = _get_clean_store_url(store_url)
+    app_url_cleaned, store_region = clean_store_url(store_url)
     # try reg match
     try:
         response: http.client.HTTPResponse
@@ -103,7 +92,7 @@ def get_orig_img_url(store_url: str, print_log: bool = True):
 
 
 async def async_get_orig_img_url(store_url: str, print_log: bool = True):
-    app_url_cleaned, store_region = _get_clean_store_url(store_url)
+    app_url_cleaned, store_region = clean_store_url(store_url)
     # try reg match
     try:
         async with ClientSession(connector=ProxyConnector.from_url(ALL_PROXY)) if ALL_PROXY \
