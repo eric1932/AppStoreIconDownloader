@@ -62,7 +62,7 @@ class AppMetadata:
         async with ClientSession(
                 connector=ProxyConnector.from_url(ALL_PROXY) if ALL_PROXY else None
         ) as session:
-            async with session.get(self.store_url) as resp:
+            async with session.get(self._metadata['store_url']) as resp:
                 assert resp.status == 200
                 self._soup = BeautifulSoup(await resp.text(), 'html.parser')
                 self._parse_metadata()
