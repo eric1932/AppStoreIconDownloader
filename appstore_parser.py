@@ -39,21 +39,16 @@ def get_orig_img_url(store_url: str, print_log: bool = True):
 # TODO merge sync & async
 async def async_get_orig_img_url(store_url: str, print_log: bool = True):
     store_url, _ = clean_store_url(store_url)
-    # try reg match
     try:
-        async with ClientSession(connector=ProxyConnector.from_url(ALL_PROXY)) if ALL_PROXY \
-                else ClientSession() as session:
-            async with session.get(store_url) as response:
-                web_html = await response.text()
+        app_metadata = AppMetadata(store_url)
+        await app_metadata.await_html_task()
     except Exception as e:
         print(e)  # TODO
         raise ValueError("AppStore:") from e
 
-    try:
-        app_name, app_version, img_ext, img_url_orig = _parse_appstore_html(print_log, web_html,
-                                                                            store_url)
-    except:
-        # print(f"store_url: {store_url}")
-        return '', '', '', '', ''
-
-    return app_name, store_url, app_version, img_ext, img_url_orig
+    metadata = app_metadata.get_metadata()
+    return (metadata.get('app_name'),
+            metadata.get('store_url'),
+            metadata.get('app_version'),
+            metadata.get('original_type'),
+            app_metadata.get_url())
