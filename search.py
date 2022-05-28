@@ -18,6 +18,7 @@ from googleapiclient.discovery import build
 from utils.cred_loader import api_key, cse_id
 from downloader import download_image
 from utils.image_util import submit_store_urls_to_async, wait_async_tasks, horizontal_show_image_by_store_urls
+from utils.url_util import clean_store_url
 
 REGIONS = ['cn', 'us']
 FLAG_ITERM = os.environ.get("TERM_PROGRAM") == "iTerm.app"
@@ -63,7 +64,7 @@ if __name__ == '__main__':
     (loop, async_img_tasks) = submit_store_urls_to_async(map(lambda x: x['link'], results), img_side_len=64) if FLAG_ITERM else (None, [])
     for i, each in enumerate(results):
         print(str(i+1) + ".\t" + each['title'].strip())
-        print("\t" + urllib.parse.unquote(each['link']))
+        print("\t" + clean_store_url(each['link'])[0])
     if args.lucky:
         print("I'm feeling lucky!")
         chosen_num = 1
