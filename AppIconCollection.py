@@ -9,6 +9,7 @@ from aiohttp import ClientSession
 from aiohttp_socks import ProxyConnector
 from bs4 import BeautifulSoup
 
+import Constants
 from proxy import ALL_PROXY
 from utils.url_util import clean_store_url
 
@@ -21,13 +22,22 @@ class AppIconCollection:
         original_type: str
         types: Set[str]
         resolutions: List[int]
+        app_name: str
+        app_version: str
 
     def __init__(self, app_store_url: str, html_page: str = None):
         self.store_url: str
         self.store_region: str
-        self.html_page: Union[str, None] = html_page
         self._html_task: Union[Task, None] = None
-        self._metadata: Union[AppIconCollection.Metadata, None] = None
+        self._soup: Union[BeautifulSoup, None] = None
+        self._metadata: AppIconCollection.Metadata = {
+            'base_url': '',
+            'original_type': '',
+            'types': set(),
+            'resolutions': [],
+            'app_name': '',
+            'app_version': '',
+        }
 
         self.store_url, self.store_region = clean_store_url(app_store_url)
 
@@ -36,7 +46,8 @@ class AppIconCollection:
             self._html_task = asyncio.create_task(self._get_page_html())
         else:
             # parse icon metadata in-place
-            self._parse_icon_metadata()
+            self._soup = BeautifulSoup(html_page, 'html.parser')
+            self._parse_metadata()
 
     async def _get_page_html(self) -> None:
         """
@@ -48,21 +59,24 @@ class AppIconCollection:
         ) as session:
             async with session.get(self.store_url) as resp:
                 assert resp.status == 200
-                self.html_page = await resp.text()
-                self._parse_icon_metadata()
+                self._soup = BeautifulSoup(await resp.text(), 'html.parser')
+                self._parse_metadata()
 
     async def await_html_task(self):
         if self._html_task:
             await self._html_task
 
-    def _parse_icon_metadata(self) -> Metadata:
+    def _parse_metadata(self):
+        self._parse_metadata_icon()
+        self._parse_metadata_app_name_version()
+
+    def _parse_metadata_icon(self) -> Metadata:
         """
         Parse icon metadata from html_response
         Get base_url, types('webp', 'png', 'jpeg'), and resolutions(123w)
         :return:
         """
-        soup = BeautifulSoup(self.html_page, 'html.parser')
-        tag_picture = soup.find('picture', attrs={
+        tag_picture = self._soup.find('picture', attrs={
             'id': re.compile(r'ember\d+'),
             'class': 'we-artwork',
         })  # The very first result is the app icon itself
@@ -77,12 +91,25 @@ class AppIconCollection:
         img_base_url = one_url[:len(one_url) - one_url[::-1].index('/') - 1]
         original_type = img_base_url[len(img_base_url) - img_base_url[::-1].index('.'):]
 
-        self._metadata = {
+        self._metadata.update({
             'base_url': img_base_url,
             'original_type': original_type,
             'types': types,
             'resolutions': resolutions,
-        }
+        })
+        return self._metadata
+
+    def _parse_metadata_app_name_version(self) -> Metadata:
+        title = self._soup.find(
+            'h1', attrs={'class': re.compile(r'(product|app)-header__title')}
+        ).next_element.strip()
+        version = self._soup.find(
+            'p', attrs={'class': 'whats-new__latest__version'}
+        ).next_element.strip().split(' ')[-1]
+        self._metadata.update({
+            'app_name': title,
+            'app_version': version,
+        })
         return self._metadata
 
     def get_metadata(self):
@@ -100,7 +127,7 @@ class AppIconCollection:
         if not resolution:
             resolution = self._metadata['resolutions'][-1]
         elif resolution == 'max':
-            resolution = '102400'
+            resolution = Constants.IMAGE_SIZE_CEIL
         else:
             assert resolution.isdigit()
 
