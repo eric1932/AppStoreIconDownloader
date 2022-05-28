@@ -8,7 +8,7 @@ a = Analysis(
     ['search.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[('.env', '.')],
     hiddenimports=['google-api-python-client', 'pkg_resources.py2_warn'],
     hookspath=[],
     hooksconfig={},

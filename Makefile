@@ -2,6 +2,7 @@ EXE_NAME=iconsearch
 
 executable: source_venv
 	pyinstaller -F \
+		--add-data ".env:." \
 	    --hidden-import google-api-python-client \
 	    --hidden-import pkg_resources.py2_warn \
 	    --bootloader-ignore-signals \
