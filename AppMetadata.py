@@ -16,6 +16,7 @@ from utils.url_util import clean_store_url
 
 class AppMetadata:
     # _DEFAULT_TYPE_PRIORITY = ['image/webp', 'image/png', 'image/jpeg']
+    _RETRY_HTML = 3
 
     class Metadata(TypedDict):
         store_url: str
@@ -59,13 +60,17 @@ class AppMetadata:
         Get web page html
         This is optionally called by __init__
         """
-        async with ClientSession(
-                connector=ProxyConnector.from_url(ALL_PROXY) if ALL_PROXY else None
-        ) as session:
-            async with session.get(self._metadata['store_url']) as resp:
-                assert resp.status == 200
-                self._soup = BeautifulSoup(await resp.text(), 'html.parser')
-                self._parse_metadata()
+        for _ in range(AppMetadata._RETRY_HTML):
+            async with ClientSession(
+                    connector=ProxyConnector.from_url(ALL_PROXY) if ALL_PROXY else None
+            ) as session:
+                async with session.get(self._metadata['store_url']) as resp:
+                    if resp.status == 200:
+                        self._soup = BeautifulSoup(await resp.text(), 'html.parser')
+                        self._parse_metadata()
+                        return
+                    # else retry
+        raise Exception(f"{self._metadata['store_url']} html bad status code: {resp.status}")
 
     async def await_html_task(self):
         if self._html_task:
