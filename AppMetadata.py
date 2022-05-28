@@ -80,7 +80,11 @@ class AppMetadata:
             'id': re.compile(r'ember\d+'),
             'class': 'we-artwork',
         })  # The very first result is the app icon itself
-        img_sources = list(filter(lambda x: type(x) == bs4.Tag and x.name == 'source', tag_picture.contents))
+        try:  # TODO possibly html document is not fetched
+            img_sources = list(filter(lambda x: type(x) == bs4.Tag and x.name == 'source', tag_picture.contents))
+        except AttributeError as e:
+            print(f"{self.store_url} icon not found")
+            raise e
         img_sources_flatten = sum([[x.split(' ') for x in each_source.attrs.get('srcset').split(', ')]
                                    for each_source in img_sources], [])
         one_url = img_sources_flatten[0][0]
