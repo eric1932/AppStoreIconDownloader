@@ -18,7 +18,9 @@ class AppMetadata:
     # _DEFAULT_TYPE_PRIORITY = ['image/webp', 'image/png', 'image/jpeg']
 
     class Metadata(TypedDict):
-        base_url: str
+        store_url: str
+        store_region: str
+        icon_base_url: str
         original_type: str
         types: Set[str]
         resolutions: List[int]
@@ -30,16 +32,19 @@ class AppMetadata:
         self.store_region: str
         self._html_task: Union[Task, None] = None
         self._soup: Union[BeautifulSoup, None] = None
+
+        store_url, store_region = clean_store_url(app_store_url)
+
         self._metadata: AppMetadata.Metadata = {
-            'base_url': '',
+            'store_url': store_url,
+            'store_region': store_region,
+            'icon_base_url': '',
             'original_type': '',
             'types': set(),
             'resolutions': [],
             'app_name': '',
             'app_version': '',
         }
-
-        self.store_url, self.store_region = clean_store_url(app_store_url)
 
         if not html_page:
             # create async task to get web page html
@@ -73,7 +78,7 @@ class AppMetadata:
     def _parse_metadata_icon(self) -> Metadata:
         """
         Parse icon metadata from html_response
-        Get base_url, types('webp', 'png', 'jpeg'), and resolutions(123w)
+        Get icon_base_url, types('webp', 'png', 'jpeg'), and resolutions(123w)
         :return:
         """
         tag_picture = self._soup.find('picture', attrs={
@@ -96,7 +101,7 @@ class AppMetadata:
         original_type = img_base_url[len(img_base_url) - img_base_url[::-1].index('.'):]
 
         self._metadata.update({
-            'base_url': img_base_url,
+            'icon_base_url': img_base_url,
             'original_type': original_type,
             'types': types,
             'resolutions': resolutions,
@@ -119,7 +124,7 @@ class AppMetadata:
     def get_metadata(self):
         return self._metadata.copy()
 
-    def get_url(self, type_: str = None, resolution: Union[int, str] = None):
+    def get_url(self, type_: str = None, resolution: Union[int, str] = None) -> str:
         """
         Get icon url
         :param type_: 'webp', 'png', 'jpeg'
@@ -135,7 +140,7 @@ class AppMetadata:
         else:
             assert resolution.isdigit()
 
-        return f"{self._metadata['base_url']}/{resolution}x0w.{type_}"
+        return f"{self._metadata['icon_base_url']}/{resolution}x0w.{type_}"
 
     def get_bin(self, type_: str = None, resolution: Union[int, str] = None):
         icon_url = self.get_url(type_, resolution)
