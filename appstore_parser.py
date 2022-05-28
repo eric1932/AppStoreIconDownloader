@@ -6,7 +6,6 @@ from aiohttp import ClientSession
 from aiohttp_socks import ProxyConnector
 
 from AppMetadata import AppMetadata
-from Exceptions import NoIconMatchException
 from proxy import ALL_PROXY
 from utils.url_util import clean_store_url
 
@@ -53,7 +52,7 @@ async def async_get_orig_img_url(store_url: str, print_log: bool = True):
     try:
         app_name, app_version, img_ext, img_url_orig = _parse_appstore_html(print_log, web_html,
                                                                             store_url)
-    except NoIconMatchException:
+    except:
         # print(f"store_url: {store_url}")
         return '', '', '', '', ''
 
