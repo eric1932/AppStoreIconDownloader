@@ -14,7 +14,8 @@ source_venv:
 	)
 
 install:
-	install dist/search ${HOME}/bin/${EXE_NAME}
+	if [ ! -d ${HOME}/.local/bin ]; then mkdir -p ${HOME}/.local/bin; fi; \
+	install dist/search ${HOME}/.local/bin/${EXE_NAME}
 
 all: executable install
 
