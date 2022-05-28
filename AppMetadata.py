@@ -14,7 +14,7 @@ from proxy import ALL_PROXY
 from utils.url_util import clean_store_url
 
 
-class AppIconCollection:
+class AppMetadata:
     # _DEFAULT_TYPE_PRIORITY = ['image/webp', 'image/png', 'image/jpeg']
 
     class Metadata(TypedDict):
@@ -30,7 +30,7 @@ class AppIconCollection:
         self.store_region: str
         self._html_task: Union[Task, None] = None
         self._soup: Union[BeautifulSoup, None] = None
-        self._metadata: AppIconCollection.Metadata = {
+        self._metadata: AppMetadata.Metadata = {
             'base_url': '',
             'original_type': '',
             'types': set(),
