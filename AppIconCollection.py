@@ -106,12 +106,12 @@ class AppIconCollection:
 
         return f"{self._metadata['base_url']}/{resolution}x0w.{type_}"
 
-    def get_bin(self, type_: str = None, resolution: str = None):
+    def get_bin(self, type_: str = None, resolution: Union[int, str] = None):
         icon_url = self.get_url(type_, resolution)
         with request.urlopen(icon_url) as resp:
             return resp.read()
 
-    async def get_bin_async(self, type_: str = None, resolution: str = None):
+    async def get_bin_async(self, type_: str = None, resolution: Union[int, str] = None):
         icon_url = self.get_url(type_, resolution)
         async with ClientSession(
                 connector=ProxyConnector.from_url(ALL_PROXY) if ALL_PROXY else None

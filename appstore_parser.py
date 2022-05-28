@@ -98,9 +98,7 @@ async def async_get_orig_img_url(store_url: str, print_log: bool = True):
         async with ClientSession(connector=ProxyConnector.from_url(ALL_PROXY)) if ALL_PROXY \
                 else ClientSession() as session:
             async with session.get(app_url_cleaned) as response:
-                response = await response.read()
-                response = response.decode()
-                web_html = response
+                web_html = await response.text()
     except Exception as e:
         print(e)  # TODO
         raise ValueError("AppStore:") from e
