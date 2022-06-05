@@ -69,6 +69,10 @@ class AppMetadata:
                         self._soup = BeautifulSoup(await resp.text(), 'html.parser')
                         self._parse_metadata()
                         return
+                    elif resp.status == 404:
+                        # Note: in this case all metadata will be the default value
+                        print(f"{self._metadata['store_url']} 404")
+                        return
                     # else retry
         raise Exception(f"{self._metadata['store_url']} html bad status code: {resp.status}")
 
@@ -77,6 +81,9 @@ class AppMetadata:
             await self._html_task
 
     def _parse_metadata(self):
+        """
+        Populate all data from html_response
+        """
         self._parse_metadata_icon()
         self._parse_metadata_app_name_version()
 
@@ -134,11 +141,15 @@ class AppMetadata:
         Get icon url
         :param type_: 'webp', 'png', 'jpeg'
         :param resolution: any resolution in metadata or 'max'
-        :return: direct url to the image at designated resolution
+        :return: direct url to the image at designated resolution OR **empty string** if page 404
         """
+        if not self._metadata['icon_base_url']:
+            return ''  # fail case
+
         if not type_:
             type_ = self._metadata['original_type']
-        if not resolution:
+
+        if not resolution and self._metadata['resolutions']:
             resolution = self._metadata['resolutions'][-1]
         elif resolution == 'max':
             resolution = Constants.IMAGE_SIZE_CEIL

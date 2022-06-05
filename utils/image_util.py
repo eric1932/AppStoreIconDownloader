@@ -55,6 +55,7 @@ async def async_get_icon_by_url(store_url: str, print_log: bool = True, size: in
                 response = await response.read()
                 image_bin = response
     else:
+        # in this case img_url is not available, so just skip this icon
         # compose empty image
         image = Image.new('RGBA', (size if size else 128, size if size else 128), (255, 255, 255, 0))
         image_as_bytes = BytesIO()
