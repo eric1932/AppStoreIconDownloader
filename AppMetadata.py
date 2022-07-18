@@ -126,7 +126,12 @@ class AppMetadata:
         ).next_element.get_text().strip()
         version = self._soup.find(
             'p', attrs={'class': 'whats-new__latest__version'}
-        ).next_element.get_text().strip().split(' ')[-1]
+        )  # If not found will be None
+        # example: https://apps.apple.com/cn/app/id1590820002
+        if version:
+            version = version.next_element.get_text().strip().split(' ')[-1]
+        else:
+            version = 'unknown'
         self._metadata.update({
             'app_name': title,
             'app_version': version,
