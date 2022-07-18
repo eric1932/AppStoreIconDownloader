@@ -123,10 +123,10 @@ class AppMetadata:
     def _parse_metadata_app_name_version(self) -> Metadata:
         title = self._soup.find(
             'h1', attrs={'class': re.compile(r'(product|app)-header__title')}
-        ).next_element.strip()
+        ).next_element.get_text().strip()
         version = self._soup.find(
             'p', attrs={'class': 'whats-new__latest__version'}
-        ).next_element.strip().split(' ')[-1]
+        ).next_element.get_text().strip().split(' ')[-1]
         self._metadata.update({
             'app_name': title,
             'app_version': version,
