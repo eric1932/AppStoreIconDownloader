@@ -10,15 +10,14 @@ import os
 import re
 import signal
 import sys
-import urllib.parse
 from sys import exit
 
 from googleapiclient.discovery import build
 
-from utils.cred_loader import api_key, cse_id
+from src.utils.cred_loader import API_KEY, CSE_ID
 from downloader import download_image
-from utils.image_util import submit_store_urls_to_async, wait_async_tasks, horizontal_show_image_by_store_urls
-from utils.url_util import clean_store_url
+from src.utils.image_util import submit_store_urls_to_async, wait_async_tasks, horizontal_show_image_by_store_urls
+from src.utils.url_util import clean_store_url
 
 REGIONS = ['cn', 'us']
 FLAG_ITERM = os.environ.get("TERM_PROGRAM") == "iTerm.app"
@@ -42,8 +41,8 @@ if __name__ == '__main__':
     else:
         kw = input("search keyword: ")
 
-    service = build("customsearch", "v1", developerKey=api_key)
-    search_result = service.cse().list(q=kw, cx=cse_id).execute()
+    service = build("customsearch", "v1", developerKey=API_KEY)
+    search_result = service.cse().list(q=kw, cx=CSE_ID).execute()
     if 'items' not in search_result.keys():
         print("No result found.")
         exit(0)

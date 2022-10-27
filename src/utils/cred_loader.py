@@ -9,5 +9,5 @@ if hasattr(sys, '_MEIPASS'):
 
 load_dotenv()
 
-api_key = os.getenv('API_KEY')
-cse_id = os.getenv('CSE_ID')
+API_KEY = os.getenv('API_KEY')
+CSE_ID = os.getenv('CSE_ID')

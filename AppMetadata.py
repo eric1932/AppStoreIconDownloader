@@ -9,9 +9,9 @@ from aiohttp import ClientSession
 from aiohttp_socks import ProxyConnector
 from bs4 import BeautifulSoup
 
-import Constants
-from proxy import ALL_PROXY
-from utils.url_util import clean_store_url
+from src import constants
+from src.utils.proxy import ALL_PROXY
+from src.utils.url_util import clean_store_url
 
 
 class AppMetadata:

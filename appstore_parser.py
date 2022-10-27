@@ -2,12 +2,8 @@ import http.client
 import urllib.error
 from urllib import request
 
-from aiohttp import ClientSession
-from aiohttp_socks import ProxyConnector
-
 from AppMetadata import AppMetadata
-from proxy import ALL_PROXY
-from utils.url_util import clean_store_url
+from src.utils.url_util import clean_store_url
 
 
 # TODO example: https://apps.apple.com/cn/app/id1540095522

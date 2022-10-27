@@ -10,8 +10,8 @@ from aiohttp import ClientSession
 from aiohttp_socks import ProxyConnector
 
 from appstore_parser import async_get_orig_img_url
-from Constants import IMAGE_SIZE_CEIL
-from proxy import ALL_PROXY
+from src.constants import IMAGE_SIZE_CEIL
+from src.utils.proxy import ALL_PROXY
 
 
 def show_image_in_terminal(image_name: str, image_binary: bytes, image_side_len: Union[int, tuple]):
@@ -26,7 +26,7 @@ def show_image_in_terminal(image_name: str, image_binary: bytes, image_side_len:
           f"inline=1:{b64_img}\a")
 
 
-# unused
+# obsolete
 # def show_image_by_store_url(store_url: str, img_wh: int = None):
 #     _, _, _, _, image_url = get_orig_img_url(store_url, print_log=False)
 #     image_binary = get_img_binary(change_img_url_size(image_url, img_wh) if img_wh else image_url)
