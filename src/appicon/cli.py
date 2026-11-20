@@ -2,6 +2,7 @@
 
 import asyncio
 import os
+import sys
 from collections.abc import Awaitable, Callable
 from enum import StrEnum
 from pathlib import Path
@@ -80,10 +81,10 @@ def _run[T](proxy: str | None, job: Callable[[IconService], Awaitable[T]]) -> T:
 
     try:
         return asyncio.run(go())
-    except (AppNotFoundError, ValueError) as exc:
-        _fail(str(exc))
     except httpx.HTTPError as exc:
         _fail(f"network error: {exc}")
+    except (AppNotFoundError, ValueError, OSError) as exc:
+        _fail(str(exc))
 
 
 def _describe(app_info: AppInfo) -> None:
@@ -103,7 +104,7 @@ def _pick(count: int) -> int:
 
 def _show_saved(path: Path) -> None:
     typer.echo(f"Saved {path}")
-    if preview.supported(os.environ):
+    if preview.enabled(os.environ, sys.stdout):
         typer.echo(preview.inline_image(path.read_bytes(), name=path.name, width=PREVIEW_WIDTH))
 
 
@@ -141,7 +142,11 @@ def get(
     found = _run(proxy, lambda service: service.resolve(app_ref, country))
     _describe(found)
     if dry_run:
-        typer.echo(f"  Icon       {icon_url(found.artwork_url, size, fmt.value)}")
+        try:
+            url = icon_url(found.artwork_url, size, fmt.value)
+        except ValueError as exc:
+            _fail(str(exc))
+        typer.echo(f"  Icon       {url}")
         return
     path = _run(
         proxy, lambda service: service.download(found, output, size=size, fmt=fmt.value, name=name)
@@ -176,28 +181,28 @@ def search(
     """Search the App Store and download the icon you pick."""
     term = " ".join(keywords) if keywords else str(typer.prompt("Search for"))
     countries = country or DEFAULT_COUNTRIES
-    show_thumbnails = preview.supported(os.environ) and not lucky
+    show_thumbnails = preview.enabled(os.environ, sys.stdout) and not lucky
 
-    async def find(service: IconService) -> tuple[list[AppInfo], list[bytes]]:
+    async def find(service: IconService) -> tuple[list[AppInfo], bytes | None]:
         apps = await service.search(term, countries, limit)
         if not (show_thumbnails and apps):
-            return apps, []
+            return apps, None
         try:
             thumbnails = await asyncio.gather(
                 *(service.fetch_icon(app, THUMBNAIL_SIZE) for app in apps)
             )
-        except (httpx.HTTPError, ValueError):
-            return apps, []  # previews are a nicety; the list still works without them
-        return apps, list(thumbnails)
+            return apps, preview.side_by_side(thumbnails)
+        except (httpx.HTTPError, ValueError, OSError):
+            return apps, None  # previews are a nicety; the list still works without them
 
-    apps, thumbnails = _run(proxy, find)
+    apps, strip = _run(proxy, find)
     if not apps:
         typer.echo("No results.")
         return
     for number, hit in enumerate(apps, start=1):
         typer.echo(f"{number:>2}. {hit.name}  [{hit.country}]  {hit.store_url}")
-    if thumbnails:
-        typer.echo(preview.inline_image(preview.side_by_side(thumbnails)))
+    if strip:
+        typer.echo(preview.inline_image(strip))
 
     choice = 1 if lucky else _pick(len(apps))
     chosen = apps[choice - 1]

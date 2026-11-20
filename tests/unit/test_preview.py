@@ -3,7 +3,7 @@ from io import BytesIO
 import pytest
 from PIL import Image
 
-from appicon.preview import inline_image, side_by_side, supported
+from appicon.preview import enabled, inline_image, side_by_side, supported
 
 
 def encode(size: tuple[int, int]) -> bytes:
@@ -16,7 +16,8 @@ def encode(size: tuple[int, int]) -> bytes:
     ("env", "expected"),
     [
         ({"TERM_PROGRAM": "iTerm.app"}, True),
-        ({"LC_TERMINAL": "iTerm2", "TERM_PROGRAM": "tmux"}, True),
+        ({"LC_TERMINAL": "iTerm2"}, True),  # over ssh
+        ({"LC_TERMINAL": "iTerm2", "TERM_PROGRAM": "tmux", "TMUX": "/tmp/tmux-1/default"}, False),
         ({"TERM_PROGRAM": "Apple_Terminal"}, False),
         ({}, False),
     ],
@@ -44,3 +45,23 @@ def test_side_by_side_puts_images_in_one_row_with_gaps() -> None:
         assert image.size == (4 + 8 + 2 + 8 + 1, 3)
         assert image.getpixel((5, 0)) == (0, 0, 0, 0)  # the gap is transparent
         assert image.getpixel((12, 0)) == (255, 0, 0, 255)  # second image starts at 4 + 8
+
+
+class FakeStream:
+    def __init__(self, tty: bool) -> None:
+        self.tty = tty
+
+    def isatty(self) -> bool:
+        return self.tty
+
+
+@pytest.mark.parametrize(
+    ("env", "tty", "expected"),
+    [
+        ({"TERM_PROGRAM": "iTerm.app"}, True, True),
+        ({"TERM_PROGRAM": "iTerm.app"}, False, False),  # piped or redirected
+        ({}, True, False),
+    ],
+)
+def test_enabled_needs_iterm_and_a_terminal(env: dict[str, str], tty: bool, expected: bool) -> None:
+    assert enabled(env, FakeStream(tty)) is expected

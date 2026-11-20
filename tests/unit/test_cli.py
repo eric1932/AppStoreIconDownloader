@@ -8,7 +8,7 @@ import respx
 from PIL import Image
 from typer.testing import CliRunner
 
-from appicon import __version__
+from appicon import __version__, preview
 from appicon.cli import app
 from appicon.clients import ITUNES_URL
 
@@ -189,3 +189,50 @@ def test_search_without_results(respx_mock: respx.MockRouter) -> None:
 
     assert result.exit_code == 0
     assert "No results" in result.output
+
+
+def test_get_reports_file_system_errors(
+    respx_mock: respx.MockRouter, recorded: Recorded, google_art: str, tmp_path: Path
+) -> None:
+    respx_mock.get(f"{ITUNES_URL}/lookup").respond(json=recorded("lookup_google_us.json"))
+    respx_mock.get(f"{google_art}/10000x10000bb.png").respond(content=encode_png((8, 8)))
+    not_a_folder = tmp_path / "file"
+    not_a_folder.write_text("x")
+
+    result = runner.invoke(app, ["get", "284815942", "-o", str(not_a_folder / "sub")])
+
+    assert result.exit_code == 1
+    assert "Error:" in result.output
+    assert "Traceback" not in result.output
+
+
+def test_get_dry_run_reports_a_missing_artwork_url(
+    respx_mock: respx.MockRouter, recorded: Recorded
+) -> None:
+    lookup = recorded("lookup_google_us.json")
+    for key in ("artworkUrl512", "artworkUrl100", "artworkUrl60"):
+        del lookup["results"][0][key]
+    respx_mock.get(f"{ITUNES_URL}/lookup").respond(json=lookup)
+
+    result = runner.invoke(app, ["get", "284815942", "--dry-run"])
+
+    assert result.exit_code == 1
+    assert "unrecognised artwork URL" in result.output
+
+
+def test_search_still_works_when_thumbnails_are_not_images(
+    respx_mock: respx.MockRouter,
+    recorded: Recorded,
+    google_art: str,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(preview, "enabled", lambda env, stream: True)
+    respx_mock.get(f"{ITUNES_URL}/search").respond(json=recorded("search_google_us.json"))
+    respx_mock.get(url__regex=r"/64x64bb\.png$").respond(content=b"<html>proxy page</html>")
+    respx_mock.get(f"{google_art}/10000x10000bb.png").respond(content=encode_png((8, 8)))
+
+    result = runner.invoke(app, ["search", "google", "-c", "us", "-o", str(tmp_path)], input="1\n")
+
+    assert result.exit_code == 0, result.output
+    assert (tmp_path / "Google_447.9_8x8.png").is_file()

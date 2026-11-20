@@ -3,13 +3,28 @@
 import base64
 from collections.abc import Mapping, Sequence
 from io import BytesIO
+from typing import Protocol
 
 from PIL import Image
 
 
+class _Stream(Protocol):
+    def isatty(self) -> bool: ...
+
+
 def supported(env: Mapping[str, str]) -> bool:
-    """True inside iTerm2, also through tmux or ssh where ``LC_TERMINAL`` is forwarded."""
+    """True inside iTerm2, also over ssh where ``LC_TERMINAL`` is forwarded.
+
+    tmux swallows the escape sequence, so it counts as unsupported.
+    """
+    if "TMUX" in env or env.get("TERM_PROGRAM") == "tmux":
+        return False
     return env.get("TERM_PROGRAM") == "iTerm.app" or env.get("LC_TERMINAL") == "iTerm2"
+
+
+def enabled(env: Mapping[str, str], stream: _Stream) -> bool:
+    """Show previews only in iTerm2 and only when ``stream`` is the terminal, not a pipe or file."""
+    return supported(env) and stream.isatty()
 
 
 def inline_image(data: bytes, name: str = "", width: int | None = None) -> str:

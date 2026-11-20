@@ -28,6 +28,7 @@ appicon get id284815942 --dry-run    # show the app and the icon URL, download n
 - **Where it saves:** `~/Downloads` by default, with names like `Google_447.9_1024x1024.png`.
 - **Which storefront:** `--country` if you give it, otherwise the one in the link, otherwise `us`.
 - **Size:** the full-size original unless you set `--size`.
+- **Existing files:** a file with the same name is overwritten.
 
 ### Search and download
 
