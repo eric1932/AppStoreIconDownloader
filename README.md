@@ -1,63 +1,68 @@
 # App Store Icon Downloader
 
-## Setup
-First, you need to create your own Google Programmable Search Engine (CSE) API and the **API key** to access it.
+Download App Store app icons at full resolution, usually 1024×1024. You can start from an App Store link, an app id, or a search.
 
-Using a custom search engine can help narrowing the result to only the App Store.
+It uses Apple's public iTunes Search and Lookup API, so you don't need an API key.
 
-To create the search engine, open [this link](https://cse.google.com/cse/create/new)
-- Fill `apps.apple.com` in the "Sites to search" section
-- Language can be any
-- Name your search engine
+## Install
 
-Save the `Search engine ID`.
-
-Next, create a new project in [Google Cloud Platform](https://console.cloud.google.com/projectcreate?organizationId=0&authuser=0)
-
-Go to [Marketplace](https://console.cloud.google.com/marketplace/product/google/customsearch.googleapis.com) and enable `Custom Search API` for this project.
-
-Go to [API and service](https://console.cloud.google.com/apis/credentials)
-
-Click on `Create credential` -> `Create API key`. This is the API key we want to use.
-
-Finally, create `.env` and fill as follows
-```dotenv
-CSE_ID='<CSE ID>'
-API_KEY='<API Key>'
-```
-
-## Usage
-### Download icons directly from urls
-```shell script
-usage: downloader.py [-h] [--debug] [URL] [name]
-
-Download app icons from App Store
-
-positional arguments:
-  URL         App Store URL (apps.apple.com...)
-  name        Application name
-
-optional arguments:
-  -h, --help  show this help message and exit
-  --debug     print only instead of download
-```
-### Search & Download
-1. Install requirements
-2. Create `.env` and fill as follows
-```dotenv
-CSE_ID='<CSE ID>'
-API_KEY='<API Key>'
-```
-3. run `search.py`
-## Development
-
-The tool is being rewritten as the `appicon` package under `src/appicon/`, managed with [uv](https://docs.astral.sh/uv/).
-The scripts above are the legacy version and will be removed once the new CLI lands.
+Install [uv](https://docs.astral.sh/uv/) first, then:
 
 ```shell
-uv sync                      # create .venv with dev tools
-uv run pytest                # unit tests
-uv run ruff check            # lint
-uv run ruff format --check   # formatting
-uv run mypy                  # type check (strict)
+uv tool install git+https://github.com/eric1932/AppStoreIconDownloader
 ```
+
+That puts an `appicon` command on your `PATH`. To update it later, run `uv tool upgrade appicon`.
+
+## Usage
+
+### Download from a link or id
+
+```shell
+appicon get https://apps.apple.com/us/app/google/id284815942
+appicon get 414478124 --country cn
+appicon get id284815942 --size 512 --format jpg --output ./icons
+appicon get id284815942 --dry-run    # show the app and the icon URL, download nothing
+```
+
+- **Where it saves:** `~/Downloads` by default, with names like `Google_447.9_1024x1024.png`.
+- **Which storefront:** `--country` if you give it, otherwise the one in the link, otherwise `us`.
+- **Size:** the full-size original unless you set `--size`.
+- **Existing files:** a file with the same name is overwritten.
+
+### Search and download
+
+```shell
+appicon search google maps             # searches the us and cn stores
+appicon search wechat -c cn --lucky    # download the first hit without asking
+```
+
+The command lists the results and asks which one to download. In iTerm2 it also shows the icons inline.
+
+### Proxy
+
+`HTTPS_PROXY` and `ALL_PROXY` are honoured, including `socks5://` URLs. You can also pass a proxy directly with `--proxy socks5://127.0.0.1:1080`.
+
+Run `appicon get --help` or `appicon search --help` to see every option.
+
+## Development
+
+The code lives in `src/appicon/` and the project is managed with uv:
+
+| Module | Role |
+| --- | --- |
+| `cli.py` | The `appicon` command. Parses arguments and prints results. |
+| `preview.py` | iTerm2 inline images. |
+| `service.py` | `IconService`, which resolves, searches and downloads. |
+| `clients.py` | `ItunesClient`, built on httpx, with timeouts and retries. |
+| `models.py`, `artwork.py` | Data types and pure helpers. They do no IO. |
+
+```shell
+uv sync                                      # create .venv with the dev tools
+uv run pytest                                # unit tests, offline
+uv run pytest -m network tests/regression    # downloads the real Google icon
+uv run ruff check && uv run ruff format --check
+uv run mypy                                  # strict type check
+```
+
+The unit tests replay recorded API responses from `tests/unit/fixtures/`. The regression tests talk to Apple directly. CI runs them on every pull request and once a week.

@@ -7,7 +7,11 @@ requires-python = ">=3.12"
 dependencies = [
     "httpx[socks]>=0.28.1",
     "pillow>=13.0.0",
+    "typer>=0.29.2",
 ]
+
+[project.scripts]
+appicon = "appicon.cli:app"
 
 [build-system]
 requires = ["uv_build>=0.11.32,<0.12.0"]
@@ -16,21 +20,6 @@ build-backend = "uv_build"
 [tool.ruff]
 line-length = 100
 target-version = "py312"
-# Legacy scripts, kept until the new CLI replaces them; delete these entries along with the files.
-extend-exclude = [
-    "AppMetadata.py",
-    "appstore_parser.py",
-    "downloader.py",
-    "search.py",
-    "*.spec",
-    "src/constants.py",
-    "src/utils",
-    "src/obsolete",
-    "tests/__init__.py",
-    "tests/commons.py",
-    "tests/test_downloader.py",
-    "tests/test_image_util.py",
-]
 
 [tool.ruff.lint]
 select = ["E", "W", "F", "I", "UP", "B", "SIM", "RUF", "PT"]
@@ -38,6 +27,9 @@ select = ["E", "W", "F", "I", "UP", "B", "SIM", "RUF", "PT"]
 [tool.mypy]
 python_version = "3.12"
 strict = true
+# Name modules by path (tests.unit.conftest) so the two conftest.py files do not clash.
+explicit_package_bases = true
+mypy_path = "src"
 files = ["src/appicon", "tests/unit", "tests/regression"]
 
 [tool.pytest.ini_options]

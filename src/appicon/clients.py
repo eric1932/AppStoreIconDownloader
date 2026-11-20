@@ -22,6 +22,17 @@ class AppNotFoundError(LookupError):
         self.country = country
 
 
+class InvalidCountryError(ValueError):
+    """The iTunes API rejected the request, which in practice means an unknown storefront code."""
+
+    def __init__(self, country: str) -> None:
+        super().__init__(
+            f"the App Store rejected country code {country!r}; "
+            "use a two-letter storefront code such as us, cn or gb"
+        )
+        self.country = country
+
+
 def make_http_client(proxy: str | None = None, timeout: float = 15.0) -> httpx.AsyncClient:
     """An HTTP client for :class:`ItunesClient`.
 
@@ -46,22 +57,28 @@ class ItunesClient:
 
     async def lookup(self, track_id: int, country: str) -> AppInfo:
         data = await self._get_json("/lookup", {"id": str(track_id), "country": country})
-        results = data.get("results") or []
-        if not results:
+        apps = _software(data)
+        if not apps:
+            # Developer, artist and album ids come back too, as non-software results.
             raise AppNotFoundError(track_id, country)
-        return AppInfo.from_itunes(results[0], country)
+        return AppInfo.from_itunes(apps[0], country)
 
     async def search(self, term: str, country: str, limit: int = 10) -> list[AppInfo]:
         params = {"term": term, "entity": "software", "country": country, "limit": str(limit)}
         data = await self._get_json("/search", params)
-        return [AppInfo.from_itunes(result, country) for result in data.get("results", [])]
+        return [AppInfo.from_itunes(result, country) for result in _software(data)]
 
     async def fetch(self, url: str) -> bytes:
         response = await self._get(url)
         return response.content
 
     async def _get_json(self, path: str, params: dict[str, str]) -> dict[str, Any]:
-        response = await self._get(f"{ITUNES_URL}{path}", params)
+        try:
+            response = await self._get(f"{ITUNES_URL}{path}", params)
+        except httpx.HTTPStatusError as exc:
+            if exc.response.status_code == 400:
+                raise InvalidCountryError(params["country"]) from exc
+            raise
         data = response.json()
         if not isinstance(data, dict):
             raise ValueError(f"unexpected iTunes API response from {path}")
@@ -81,3 +98,7 @@ class ItunesClient:
                     return response.raise_for_status()
             await asyncio.sleep(self._backoff * attempt)
         raise AssertionError("unreachable")  # pragma: no cover
+
+
+def _software(data: dict[str, Any]) -> list[dict[str, Any]]:
+    return [result for result in data.get("results", []) if result.get("wrapperType") == "software"]

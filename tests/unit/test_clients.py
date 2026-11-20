@@ -5,7 +5,7 @@ import httpx
 import pytest
 import respx
 
-from appicon.clients import ITUNES_URL, AppNotFoundError, ItunesClient
+from appicon.clients import ITUNES_URL, AppNotFoundError, InvalidCountryError, ItunesClient
 
 pytestmark = pytest.mark.anyio
 type Recorded = Callable[[str], Any]
@@ -96,3 +96,30 @@ async def test_fetch_returns_the_response_body(
     respx_mock.get(ICON).respond(content=b"\x89PNG fake bytes")
 
     assert await client.fetch(ICON) == b"\x89PNG fake bytes"
+
+
+async def test_lookup_of_a_developer_id_raises_not_found(
+    client: ItunesClient, respx_mock: respx.MockRouter, recorded: Recorded
+) -> None:
+    respx_mock.get(f"{ITUNES_URL}/lookup").respond(json=recorded("lookup_developer.json"))
+
+    with pytest.raises(AppNotFoundError, match="no app with id 281956209"):
+        await client.lookup(281956209, "us")
+
+
+async def test_lookup_names_a_rejected_country_code(
+    client: ItunesClient, respx_mock: respx.MockRouter
+) -> None:
+    respx_mock.get(f"{ITUNES_URL}/lookup").respond(400)
+
+    with pytest.raises(InvalidCountryError, match="'uk'"):
+        await client.lookup(284815942, "uk")
+
+
+async def test_search_names_a_rejected_country_code(
+    client: ItunesClient, respx_mock: respx.MockRouter
+) -> None:
+    respx_mock.get(f"{ITUNES_URL}/search").respond(400)
+
+    with pytest.raises(InvalidCountryError, match="'uk'"):
+        await client.search("google", "uk")
