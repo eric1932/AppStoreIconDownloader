@@ -5,4 +5,4 @@ beautifulsoup4
 google-api-python-client==1.8.0
 pyinstaller
 python-dotenv
-selenium~=3.141.0
+selenium~=4.53.0
