@@ -4,7 +4,10 @@ version = "2.0.0.dev0"
 description = "Download App Store app icons at full resolution."
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "httpx[socks]>=0.28.1",
+    "pillow>=13.0.0",
+]
 
 [build-system]
 requires = ["uv_build>=0.11.32,<0.12.0"]
@@ -35,7 +38,7 @@ select = ["E", "W", "F", "I", "UP", "B", "SIM", "RUF", "PT"]
 [tool.mypy]
 python_version = "3.12"
 strict = true
-files = ["src/appicon", "tests/unit"]
+files = ["src/appicon", "tests/unit", "tests/regression"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests/unit"]
@@ -46,5 +49,6 @@ markers = ["network: talks to real Apple endpoints (regression tests)"]
 dev = [
     "mypy>=2.4.1",
     "pytest>=9.2.0",
+    "respx>=0.23.1",
     "ruff>=0.17.6",
 ]
