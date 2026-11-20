@@ -157,7 +157,7 @@ class AppMetadata:
         if not resolution and self._metadata['resolutions']:
             resolution = self._metadata['resolutions'][-1]
         elif resolution == 'max':
-            resolution = Constants.IMAGE_SIZE_CEIL
+            resolution = constants.IMAGE_SIZE_CEIL
         else:
             assert resolution.isdigit()
 
