@@ -49,3 +49,15 @@ CSE_ID='<CSE ID>'
 API_KEY='<API Key>'
 ```
 3. run `search.py`
+## Development
+
+The tool is being rewritten as the `appicon` package under `src/appicon/`, managed with [uv](https://docs.astral.sh/uv/).
+The scripts above are the legacy version and will be removed once the new CLI lands.
+
+```shell
+uv sync                      # create .venv with dev tools
+uv run pytest                # unit tests
+uv run ruff check            # lint
+uv run ruff format --check   # formatting
+uv run mypy                  # type check (strict)
+```
