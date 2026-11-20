@@ -4,6 +4,9 @@ on:
   push:
     branches: [master]
   pull_request:
+  schedule:
+    # Weekly, so a change on Apple's side shows up even when nobody pushes.
+    - cron: "23 4 * * 1"
 
 permissions:
   contents: read
@@ -32,3 +35,12 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - run: uv sync --locked
       - run: uv run pytest
+
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d  # v10.4.0
+      - run: uv sync --locked
+      - name: Download a real icon from the App Store
+        run: uv run pytest -m network tests/regression -v
