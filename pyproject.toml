@@ -1,6 +1,6 @@
 [project]
 name = "appicon"
-version = "2.0.0.dev0"
+version = "2.0.0"
 description = "Download App Store app icons at full resolution."
 readme = "README.md"
 requires-python = ">=3.12"
